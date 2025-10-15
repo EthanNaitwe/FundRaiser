@@ -75,7 +75,10 @@ const MOCK_EVENTS: Event[] = [
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   
-  const filteredEvents = MOCK_EVENTS.filter(event =>
+  //todo: remove mock functionality - filter to show only public events
+  const publicEvents = MOCK_EVENTS.filter(event => event.isPublic);
+  
+  const filteredEvents = publicEvents.filter(event =>
     event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     event.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -105,6 +108,7 @@ export default function HomePage() {
       </div>
 
       <div className="container mx-auto px-4 py-12">
+        <h2 className="text-2xl font-semibold mb-6">Public Fundraising Events</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredEvents.map((event) => (
             <EventCard

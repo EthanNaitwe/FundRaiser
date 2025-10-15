@@ -1,10 +1,25 @@
 import EventForm from "@/components/EventForm";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 export default function CreateEventPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { isAuthenticated } = useAuth();
+
+  //todo: remove mock functionality - replace with proper auth protection
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to create an event.",
+        variant: "destructive",
+      });
+      setLocation("/");
+    }
+  }, [isAuthenticated, setLocation, toast]);
 
   const handleSubmit = (data: any) => {
     //todo: remove mock functionality - this will be replaced with actual API call

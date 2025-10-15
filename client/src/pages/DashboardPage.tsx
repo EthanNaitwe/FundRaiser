@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,10 +13,13 @@ import {
 } from "@/components/ui/table";
 import { DollarSign, TrendingUp, Users, Bell, Share2, Eye } from "lucide-react";
 import ProgressBar from "@/components/ProgressBar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 import eventImage1 from '@assets/stock_images/community_charity_ev_97ad4e3e.jpg';
 import eventImage2 from '@assets/stock_images/medical_fundraising__0361a3be.jpg';
 
-//todo: remove mock functionality
+//todo: remove mock functionality - these are the user's events (both public and private)
 const MOCK_EVENTS = [
   {
     id: '1',
@@ -26,6 +29,7 @@ const MOCK_EVENTS = [
     coverImage: eventImage1,
     status: 'active',
     contributorsCount: 23,
+    isPublic: true,
   },
   {
     id: '2',
@@ -35,6 +39,17 @@ const MOCK_EVENTS = [
     coverImage: eventImage2,
     status: 'active',
     contributorsCount: 45,
+    isPublic: true,
+  },
+  {
+    id: '3',
+    title: 'Private Family Fundraiser',
+    goalAmount: 5000,
+    currentAmount: 2800,
+    coverImage: eventImage1,
+    status: 'active',
+    contributorsCount: 8,
+    isPublic: false,
   },
 ];
 
@@ -86,6 +101,22 @@ const MOCK_NOTIFICATIONS = [
 ];
 
 export default function DashboardPage() {
+  const { isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  //todo: remove mock functionality - replace with proper auth protection
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to view your dashboard.",
+        variant: "destructive",
+      });
+      setLocation("/");
+    }
+  }, [isAuthenticated, setLocation, toast]);
+
   const totalRaised = MOCK_EVENTS.reduce((sum, event) => sum + event.currentAmount, 0);
   const activeEvents = MOCK_EVENTS.filter(e => e.status === 'active').length;
   const totalContributors = MOCK_EVENTS.reduce((sum, event) => sum + event.contributorsCount, 0);
@@ -96,7 +127,7 @@ export default function DashboardPage() {
       <div className="container mx-auto px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-          <p className="text-muted-foreground">Manage your fundraising events and track contributions</p>
+          <p className="text-muted-foreground">Manage all your fundraising events (public & private) and track contributions</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -171,9 +202,14 @@ export default function DashboardPage() {
                     />
                     <div className="flex-1 space-y-4">
                       <div>
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between mb-2 gap-2">
                           <h3 className="text-xl font-semibold">{event.title}</h3>
-                          <Badge className="bg-primary text-primary-foreground">{event.status}</Badge>
+                          <div className="flex items-center gap-2">
+                            {!event.isPublic && (
+                              <Badge variant="outline" className="border-blue/50 text-blue">Private</Badge>
+                            )}
+                            <Badge className="bg-primary text-primary-foreground">{event.status}</Badge>
+                          </div>
                         </div>
                         <ProgressBar current={event.currentAmount} goal={event.goalAmount} />
                       </div>
