@@ -3,6 +3,8 @@ import EventCard from "@/components/EventCard";
 import { Event } from "@shared/schema";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 import eventImage1 from '@assets/stock_images/community_charity_ev_97ad4e3e.jpg';
 import eventImage2 from '@assets/stock_images/medical_fundraising__0361a3be.jpg';
 import eventImage3 from '@assets/stock_images/environmental_conser_a6d5db4e.jpg';
@@ -74,6 +76,8 @@ const MOCK_EVENTS: Event[] = [
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
   
   //todo: remove mock functionality - filter to show only public events
   const publicEvents = MOCK_EVENTS.filter(event => event.isPublic);
@@ -82,6 +86,19 @@ export default function HomePage() {
     event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     event.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleViewDetails = (id: string) => {
+    setLocation(`/event/${id}`);
+  };
+
+  const handleShare = (id: string) => {
+    const url = `${window.location.origin}/event/${id}`;
+    navigator.clipboard.writeText(url);
+    toast({
+      title: "Link copied!",
+      description: "Share this link with potential contributors",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -114,8 +131,8 @@ export default function HomePage() {
             <EventCard
               key={event.id}
               event={event}
-              onViewDetails={(id) => console.log('View details:', id)}
-              onShare={(id) => console.log('Share event:', id)}
+              onViewDetails={handleViewDetails}
+              onShare={handleShare}
             />
           ))}
         </div>

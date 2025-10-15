@@ -37,19 +37,19 @@ export default function Navigation() {
 
             <div className="hidden md:flex items-center gap-6">
               <Link href="/">
-                <a className={`text-sm font-medium transition-colors hover:text-primary ${
+                <span className={`text-sm font-medium transition-colors hover:text-primary cursor-pointer ${
                   location === '/' ? 'text-foreground' : 'text-muted-foreground'
                 }`}>
                   Explore Events
-                </a>
+                </span>
               </Link>
               {isAuthenticated && (
                 <Link href="/dashboard">
-                  <a className={`text-sm font-medium transition-colors hover:text-primary ${
+                  <span className={`text-sm font-medium transition-colors hover:text-primary cursor-pointer ${
                     location === '/dashboard' ? 'text-foreground' : 'text-muted-foreground'
                   }`}>
                     Dashboard
-                  </a>
+                  </span>
                 </Link>
               )}
             </div>

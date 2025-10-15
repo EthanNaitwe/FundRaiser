@@ -104,6 +104,19 @@ export default function DashboardPage() {
   const { isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  
+  const handleViewEvent = (id: string) => {
+    setLocation(`/event/${id}`);
+  };
+
+  const handleShareEvent = (id: string) => {
+    const url = `${window.location.origin}/event/${id}`;
+    navigator.clipboard.writeText(url);
+    toast({
+      title: "Link copied!",
+      description: "Share this link with potential contributors",
+    });
+  };
 
   //todo: remove mock functionality - replace with proper auth protection
   useEffect(() => {
@@ -214,11 +227,21 @@ export default function DashboardPage() {
                         <ProgressBar current={event.currentAmount} goal={event.goalAmount} />
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" data-testid={`button-view-${event.id}`}>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleViewEvent(event.id)}
+                          data-testid={`button-view-${event.id}`}
+                        >
                           <Eye className="h-4 w-4 mr-2" />
                           View
                         </Button>
-                        <Button variant="outline" size="sm" data-testid={`button-share-${event.id}`}>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleShareEvent(event.id)}
+                          data-testid={`button-share-${event.id}`}
+                        >
                           <Share2 className="h-4 w-4 mr-2" />
                           Share Link
                         </Button>
