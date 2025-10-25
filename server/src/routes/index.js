@@ -1,6 +1,7 @@
 const express = require('express');
 const eventController = require('../controllers/event.controller');
 const contributionController = require('../controllers/contribution.controller');
+const authRoutes = require('./auth.routes');
 const { 
   createEventSchema, 
   updateEventSchema, 
@@ -10,6 +11,9 @@ const {
 } = require('../validations/event.validation');
 
 const router = express.Router();
+
+// Auth routes
+router.use('/', authRoutes);
 
 // Event routes
 router.get('/events', eventController.getAllEvents);

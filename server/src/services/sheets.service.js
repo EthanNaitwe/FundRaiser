@@ -41,9 +41,13 @@ class GoogleSheetsService {
           // Convert string values back to appropriate types
           if (header === 'goalAmount' || header === 'currentAmount' || header === 'amount') {
             value = parseFloat(value) || 0;
-          } else if (header === 'isPublic' || header === 'isAnonymous' || header === 'isPledge') {
+          } else if (header === 'isPublic' || header === 'isAnonymous' || header === 'isPledge' || 
+                     header === 'isVerified' || header === 'isActive' || header === 'isDefault') {
             value = value === 'TRUE' || value === 'true';
-          } else if (header === 'deadline' || header === 'createdAt') {
+          } else if (header === 'deadline' || header === 'createdAt' || header === 'updatedAt' || 
+                     header === 'lastLogin' || header === 'expiresAt' || header === 'pledgeDate' || 
+                     header === 'fulfillmentDate' || header === 'sentAt' || header === 'readAt' ||
+                     header === 'processedAt' || header === 'lastReminderDate') {
             value = value ? new Date(value) : null;
           }
           
@@ -60,9 +64,43 @@ class GoogleSheetsService {
   // Generic method to add a row to a sheet
   async addRow(sheetName, data) {
     try {
-      const headers = sheetName === sheetsConfig.sheets.events 
-        ? sheetsConfig.eventsHeaders 
-        : sheetsConfig.contributionsHeaders;
+      let headers;
+      
+      // Determine headers based on sheet name
+      switch (sheetName) {
+        case sheetsConfig.sheets.events:
+          headers = sheetsConfig.eventsHeaders;
+          break;
+        case sheetsConfig.sheets.contributions:
+          headers = sheetsConfig.contributionsHeaders;
+          break;
+        case sheetsConfig.sheets.users:
+          headers = sheetsConfig.usersHeaders;
+          break;
+        case sheetsConfig.sheets.payments:
+          headers = sheetsConfig.paymentsHeaders;
+          break;
+        case sheetsConfig.sheets.pledges:
+          headers = sheetsConfig.pledgesHeaders;
+          break;
+        case sheetsConfig.sheets.notifications:
+          headers = sheetsConfig.notificationsHeaders;
+          break;
+        case sheetsConfig.sheets.loginLogs:
+          headers = sheetsConfig.loginLogsHeaders;
+          break;
+        case sheetsConfig.sheets.eventUpdates:
+          headers = sheetsConfig.eventUpdatesHeaders;
+          break;
+        case sheetsConfig.sheets.userSessions:
+          headers = sheetsConfig.userSessionsHeaders;
+          break;
+        case sheetsConfig.sheets.paymentMethods:
+          headers = sheetsConfig.paymentMethodsHeaders;
+          break;
+        default:
+          throw new Error(`Unknown sheet: ${sheetName}`);
+      }
 
       // Convert object to array in the correct order
       const row = headers.map(header => {
@@ -221,6 +259,66 @@ class GoogleSheetsService {
 
   async deleteContribution(id) {
     return await this.deleteRow(sheetsConfig.sheets.contributions, id);
+  }
+
+  // User-specific methods
+  async getAllUsers() {
+    return await this.getAllRows(sheetsConfig.sheets.users);
+  }
+
+  async getUserById(id) {
+    const users = await this.getAllUsers();
+    return users.find(user => user.id === id);
+  }
+
+  async getUserByEmail(email) {
+    const users = await this.getAllUsers();
+    return users.find(user => user.email === email);
+  }
+
+  async getUserByPhone(phone) {
+    const users = await this.getAllUsers();
+    return users.find(user => user.phone === phone);
+  }
+
+  async createUser(userData) {
+    return await this.addRow(sheetsConfig.sheets.users, userData);
+  }
+
+  async updateUser(id, updates) {
+    return await this.updateRow(sheetsConfig.sheets.users, id, updates);
+  }
+
+  async deleteUser(id) {
+    return await this.deleteRow(sheetsConfig.sheets.users, id);
+  }
+
+  // Login Logs methods
+  async createLoginLog(logData) {
+    return await this.addRow(sheetsConfig.sheets.loginLogs, logData);
+  }
+
+  async getLoginLogsByUserId(userId) {
+    const logs = await this.getAllRows(sheetsConfig.sheets.loginLogs);
+    return logs.filter(log => log.userId === userId);
+  }
+
+  // User Sessions methods
+  async createUserSession(sessionData) {
+    return await this.addRow(sheetsConfig.sheets.userSessions, sessionData);
+  }
+
+  async getUserSessionsByUserId(userId) {
+    const sessions = await this.getAllRows(sheetsConfig.sheets.userSessions);
+    return sessions.filter(session => session.userId === userId);
+  }
+
+  async updateUserSession(id, updates) {
+    return await this.updateRow(sheetsConfig.sheets.userSessions, id, updates);
+  }
+
+  async deleteUserSession(id) {
+    return await this.deleteRow(sheetsConfig.sheets.userSessions, id);
   }
 }
 
