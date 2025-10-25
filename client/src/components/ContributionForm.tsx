@@ -7,29 +7,38 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
+import USSDModal from "./USSDModal";
 
 interface ContributionFormProps {
   eventId: string;
+  eventTitle?: string;
   onSubmit?: (data: any) => void;
   sticky?: boolean;
 }
 
 const PRESET_AMOUNTS = [25, 50, 100, 250];
 
-export default function ContributionForm({ eventId, onSubmit, sticky = false }: ContributionFormProps) {
+export default function ContributionForm({ eventId, eventTitle, onSubmit, sticky = false }: ContributionFormProps) {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState("");
   const [donorName, setDonorName] = useState("");
+  const [donorPhone, setDonorPhone] = useState("");
   const [donorEmail, setDonorEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isPledge, setIsPledge] = useState(false);
+  const [pledgeDate, setPledgeDate] = useState("");
+  const [showUSSDModal, setShowUSSDModal] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const amount = selectedAmount || parseInt(customAmount);
-    console.log('Contribution submitted:', { amount, donorName, donorEmail, message, isAnonymous, isPledge });
-    onSubmit?.({ eventId, amount, donorName, donorEmail, message, isAnonymous, isPledge });
+    
+    // Show USSD modal for payment
+    setShowUSSDModal(true);
+    
+    // Also call the original onSubmit callback if provided
+    onSubmit?.({ eventId, amount, donorName, donorPhone, donorEmail, message, isAnonymous, isPledge, pledgeDate });
   };
 
   const finalAmount = selectedAmount || (customAmount ? parseInt(customAmount) : 0);
@@ -89,14 +98,25 @@ export default function ContributionForm({ eventId, onSubmit, sticky = false }: 
               />
             </div>
             <div>
-              <Label htmlFor="donor-email">Email Address</Label>
+              <Label htmlFor="donor-phone">Phone Number</Label>
+              <Input
+                id="donor-phone"
+                type="tel"
+                value={donorPhone}
+                onChange={(e) => setDonorPhone(e.target.value)}
+                placeholder="07XX XXX XXX"
+                required
+                data-testid="input-donor-phone"
+              />
+            </div>
+            <div>
+              <Label htmlFor="donor-email">Email Address (Optional)</Label>
               <Input
                 id="donor-email"
                 type="email"
                 value={donorEmail}
                 onChange={(e) => setDonorEmail(e.target.value)}
                 placeholder="john@example.com"
-                required
                 data-testid="input-donor-email"
               />
             </div>
@@ -115,15 +135,6 @@ export default function ContributionForm({ eventId, onSubmit, sticky = false }: 
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label htmlFor="anonymous" className="cursor-pointer">Donate anonymously</Label>
-              <Switch
-                id="anonymous"
-                checked={isAnonymous}
-                onCheckedChange={setIsAnonymous}
-                data-testid="switch-anonymous"
-              />
-            </div>
-            <div className="flex items-center justify-between">
               <Label htmlFor="pledge" className="cursor-pointer">Make this a pledge</Label>
               <Switch
                 id="pledge"
@@ -132,18 +143,41 @@ export default function ContributionForm({ eventId, onSubmit, sticky = false }: 
                 data-testid="switch-pledge"
               />
             </div>
+            {isPledge && (
+              <div>
+                <Label htmlFor="pledge-date">When will you make the payment?</Label>
+                <Input
+                  id="pledge-date"
+                  type="date"
+                  value={pledgeDate}
+                  onChange={(e) => setPledgeDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  required
+                  data-testid="input-pledge-date"
+                />
+              </div>
+            )}
           </div>
 
           <Button
             type="submit"
             className="w-full h-12 text-base"
-            disabled={finalAmount <= 0 || !donorName || !donorEmail}
+            disabled={finalAmount <= 0 || !donorName || !donorPhone || (isPledge && !pledgeDate)}
             data-testid="button-contribute"
           >
             {isPledge ? 'Make Pledge' : 'Contribute'} ${finalAmount.toLocaleString()}
           </Button>
         </form>
       </CardContent>
+      
+      {/* USSD Payment Modal */}
+      <USSDModal
+        isOpen={showUSSDModal}
+        onClose={() => setShowUSSDModal(false)}
+        amount={finalAmount}
+        phoneNumber={donorPhone}
+        eventTitle={eventTitle || "this event"}
+      />
     </Card>
   );
 }

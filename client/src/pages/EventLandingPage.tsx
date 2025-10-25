@@ -4,71 +4,31 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Share2, MapPin, Calendar, Copy, Check } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Share2, MapPin, Calendar, Copy, Check, Users } from "lucide-react";
 import ProgressBar from "@/components/ProgressBar";
 import ContributionForm from "@/components/ContributionForm";
 import ContributionList from "@/components/ContributionList";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
-import { Event } from "@shared/schema";
-import eventImage1 from '@assets/stock_images/community_charity_ev_97ad4e3e.jpg';
-import eventImage2 from '@assets/stock_images/medical_fundraising__0361a3be.jpg';
-import eventImage3 from '@assets/stock_images/environmental_conser_a6d5db4e.jpg';
-import eventImage4 from '@assets/stock_images/disaster_relief_emer_a62b03c5.jpg';
+import { MOCK_EVENTS } from "@/data/mockData";
 
 export default function EventLandingPage() {
   const [, params] = useRoute("/event/:id");
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState("details");
 
-  //todo: remove mock functionality - This simulates fetching all events (including private)
-  const MOCK_EVENTS: Event[] = [
-    {
-      id: '1',
-      title: 'Support Local School Library',
-      description: 'Help us build a modern library for our community school to give children access to books and digital resources. Our school serves over 500 students, many from underprivileged backgrounds. A well-stocked library with modern resources can transform their educational experience and open doors to endless opportunities.\n\nYour contribution will help us:\n• Purchase new books and digital resources\n• Set up computer workstations\n• Create comfortable reading spaces\n• Organize literacy programs',
-      goalAmount: 10000,
-      currentAmount: 6500,
-      coverImage: eventImage1,
-      location: 'Springfield Elementary School, 123 Main St',
-      deadline: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-      isPublic: true,
-      organizerName: 'Sarah Johnson',
-      organizerEmail: 'sarah@example.com',
-      status: 'active',
-      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    },
-    {
-      id: '2',
-      title: 'Medical Equipment for Community Clinic',
-      description: 'Our local clinic needs updated medical equipment to serve the community better. Every donation helps save lives and improve healthcare access for everyone in our community.\n\nFunds will be used for:\n• Modern diagnostic equipment\n• Patient monitoring systems\n• Emergency response tools\n• Staff training programs',
-      goalAmount: 25000,
-      currentAmount: 18750,
-      coverImage: eventImage2,
-      location: 'Community Health Center, Downtown',
-      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      isPublic: true,
-      organizerName: 'Dr. Michael Chen',
-      organizerEmail: 'michael@example.com',
-      status: 'active',
-      createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-    },
-    {
-      id: '3',
-      title: 'Private Family Fundraiser',
-      description: 'This is a private fundraising campaign for our family. Thank you to everyone who has been invited to contribute.\n\nYour support during this difficult time means everything to us. We are grateful for the love and generosity of our community.',
-      goalAmount: 5000,
-      currentAmount: 2800,
-      coverImage: eventImage3,
-      location: null,
-      deadline: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
-      isPublic: false,
-      organizerName: 'The Smith Family',
-      organizerEmail: 'smithfamily@example.com',
-      status: 'active',
-      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    },
-  ];
 
   const eventId = params?.id;
   const mockEvent = MOCK_EVENTS.find(e => e.id === eventId);
@@ -100,12 +60,12 @@ export default function EventLandingPage() {
     {
       id: '2',
       eventId: mockEvent.id,
-      donorName: 'Anonymous',
-      donorEmail: 'anon@example.com',
+      donorName: 'Emily Chen',
+      donorEmail: 'emily@example.com',
       amount: 250,
-      isAnonymous: true,
+      isAnonymous: false,
       isPledge: false,
-      message: null,
+      message: 'A happy marriage is a blessing!',
       status: 'completed',
       createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
     },
@@ -184,57 +144,154 @@ export default function EventLandingPage() {
 
       <div className="container mx-auto px-4 py-12">
         <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <div>
-              <ProgressBar current={mockEvent.currentAmount} goal={mockEvent.goalAmount} className="mb-8" />
-              
-              <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-2xl font-semibold mb-4">About This Campaign</h2>
-                  <div className="prose prose-sm max-w-none text-muted-foreground whitespace-pre-line">
-                    {mockEvent.description}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+          <div className="lg:col-span-2">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-8">
+                <TabsTrigger value="details" data-testid="tab-details">
+                  Event Details
+                </TabsTrigger>
+                <TabsTrigger value="contributors" data-testid="tab-contributors">
+                  <Users className="h-4 w-4 mr-2" />
+                  Contributors
+                  {isAuthenticated && mockContributions.length > 0 && (
+                    <Badge className="ml-2 bg-primary text-primary-foreground px-2 py-0">
+                      {mockContributions.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
 
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-semibold mb-4">Event Location</h3>
-                <div className="bg-muted/50 rounded-lg h-64 flex items-center justify-center">
-                  <div className="text-center space-y-2">
-                    <MapPin className="h-12 w-12 mx-auto text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Map integration placeholder</p>
-                    <p className="text-sm font-medium">{mockEvent.location}</p>
-                  </div>
+              <TabsContent value="details" className="space-y-8">
+                <div>
+                  {isAuthenticated && (
+                    <ProgressBar current={mockEvent.currentAmount} goal={mockEvent.goalAmount} className="mb-8" />
+                  )}
+                  
+                  <Card>
+                    <CardContent className="p-6">
+                      <h2 className="text-2xl font-semibold mb-4">About This Campaign</h2>
+                      <div className="prose prose-sm max-w-none text-muted-foreground whitespace-pre-line">
+                        {mockEvent.description}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </CardContent>
-            </Card>
 
-            <ContributionList contributions={mockContributions} />
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold mb-4">Event Location</h3>
+                    <div className="bg-muted/50 rounded-lg h-64 flex items-center justify-center">
+                      <div className="text-center space-y-2">
+                        <MapPin className="h-12 w-12 mx-auto text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">Map integration placeholder</p>
+                        <p className="text-sm font-medium">{mockEvent.location}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-semibold mb-4">Organizer</h3>
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-12 w-12">
-                    <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                      {mockEvent.organizerName.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{mockEvent.organizerName}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Created {formatDistanceToNow(mockEvent.createdAt, { addSuffix: true })}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                {isAuthenticated && (
+                  <Card>
+                    <CardContent className="p-6">
+                      <h2 className="text-2xl font-semibold mb-4">Recent Contributions</h2>
+                      <p className="text-muted-foreground mb-6">
+                        Thank you to all the wonderful people who have contributed to this event!
+                      </p>
+                      <ContributionList contributions={mockContributions} />
+                    </CardContent>
+                  </Card>
+                )}
+
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold mb-4">Organizer</h3>
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                          {mockEvent.organizerName.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">{mockEvent.organizerName}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Created {formatDistanceToNow(mockEvent.createdAt, { addSuffix: true })}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="contributors" className="space-y-8">
+                {isAuthenticated && (
+                  <ProgressBar current={mockEvent.currentAmount} goal={mockEvent.goalAmount} className="mb-8" />
+                )}
+                
+                {isAuthenticated ? (
+                  <Card>
+                    <CardContent className="p-6">
+                      <h2 className="text-2xl font-semibold mb-6">Contributors</h2>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Donor</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Date</TableHead>
+                            {/* <TableHead>Message</TableHead> */}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {mockContributions.map((contribution) => (
+                            <TableRow key={contribution.id} data-testid={`row-contribution-${contribution.id}`}>
+                              <TableCell className="font-medium">
+                                {contribution.isAnonymous ? 'Anonymous' : contribution.donorName}
+                              </TableCell>
+                              <TableCell className="font-semibold text-primary">
+                                ${contribution.amount.toLocaleString()}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={contribution.isPledge ? "outline" : "secondary"}>
+                                  {contribution.isPledge ? 'Pledge' : 'Payment'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={contribution.status === 'completed' ? "default" : "outline"}>
+                                  {contribution.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground">
+                                {contribution.createdAt.toLocaleDateString()}
+                              </TableCell>
+                              {/* <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
+                                {contribution.message || '-'}
+                              </TableCell> */}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="text-center py-12">
+                        <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                        <h3 className="text-xl font-semibold mb-2">Contributors</h3>
+                        <p className="text-muted-foreground">
+                          Please log in to view the list of contributors.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
 
           <div>
-            <ContributionForm eventId={mockEvent.id} onSubmit={handleContribution} sticky />
+            <ContributionForm eventId={mockEvent.id} eventTitle={mockEvent.title} onSubmit={handleContribution} sticky />
           </div>
         </div>
       </div>

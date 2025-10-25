@@ -24,7 +24,10 @@ export default function EventCard({ event, onViewDetails, onShare }: EventCardPr
     : null;
 
   return (
-    <Card className="overflow-hidden hover-elevate active-elevate-2 transition-all duration-300">
+    <Card 
+      className="overflow-hidden hover-elevate active-elevate-2 transition-all duration-300 cursor-pointer"
+      onClick={() => onViewDetails?.(event.id)}
+    >
       <div className="relative h-48 overflow-hidden">
         <img
           src={event.coverImage || "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800"}
@@ -66,7 +69,10 @@ export default function EventCard({ event, onViewDetails, onShare }: EventCardPr
       <CardFooter className="flex gap-2 pt-0">
         <Button
           className="flex-1"
-          onClick={() => onViewDetails?.(event.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewDetails?.(event.id);
+          }}
           data-testid={`button-view-${event.id}`}
         >
           View Details
@@ -74,7 +80,10 @@ export default function EventCard({ event, onViewDetails, onShare }: EventCardPr
         <Button
           variant="outline"
           size="icon"
-          onClick={() => onShare?.(event.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onShare?.(event.id);
+          }}
           data-testid={`button-share-${event.id}`}
         >
           <Share2 className="h-4 w-4" />

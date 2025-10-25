@@ -16,89 +16,7 @@ import ProgressBar from "@/components/ProgressBar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import eventImage1 from '@assets/stock_images/community_charity_ev_97ad4e3e.jpg';
-import eventImage2 from '@assets/stock_images/medical_fundraising__0361a3be.jpg';
-
-//todo: remove mock functionality - these are the user's events (both public and private)
-const MOCK_EVENTS = [
-  {
-    id: '1',
-    title: 'Support Local School Library',
-    goalAmount: 10000,
-    currentAmount: 6500,
-    coverImage: eventImage1,
-    status: 'active',
-    contributorsCount: 23,
-    isPublic: true,
-  },
-  {
-    id: '2',
-    title: 'Medical Equipment Fund',
-    goalAmount: 25000,
-    currentAmount: 18750,
-    coverImage: eventImage2,
-    status: 'active',
-    contributorsCount: 45,
-    isPublic: true,
-  },
-  {
-    id: '3',
-    title: 'Private Family Fundraiser',
-    goalAmount: 5000,
-    currentAmount: 2800,
-    coverImage: eventImage1,
-    status: 'active',
-    contributorsCount: 8,
-    isPublic: false,
-  },
-];
-
-const MOCK_CONTRIBUTIONS = [
-  {
-    id: '1',
-    eventTitle: 'Support Local School Library',
-    donorName: 'John Smith',
-    amount: 100,
-    status: 'completed',
-    isPledge: false,
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-  },
-  {
-    id: '2',
-    eventTitle: 'Medical Equipment Fund',
-    donorName: 'Anonymous',
-    amount: 250,
-    status: 'completed',
-    isPledge: false,
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-  },
-  {
-    id: '3',
-    eventTitle: 'Support Local School Library',
-    donorName: 'Emily Chen',
-    amount: 50,
-    status: 'pending',
-    isPledge: true,
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-  },
-];
-
-const MOCK_NOTIFICATIONS = [
-  {
-    id: '1',
-    type: 'contribution',
-    message: 'New $100 contribution from John Smith',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    read: false,
-  },
-  {
-    id: '2',
-    type: 'milestone',
-    message: 'Medical Equipment Fund reached 75% of goal!',
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    read: true,
-  },
-];
+import { MOCK_EVENTS, MOCK_CONTRIBUTIONS, MOCK_NOTIFICATIONS } from "@/data/mockData";
 
 export default function DashboardPage() {
   const { isAuthenticated } = useAuth();
@@ -132,7 +50,7 @@ export default function DashboardPage() {
 
   const totalRaised = MOCK_EVENTS.reduce((sum, event) => sum + event.currentAmount, 0);
   const activeEvents = MOCK_EVENTS.filter(e => e.status === 'active').length;
-  const totalContributors = MOCK_EVENTS.reduce((sum, event) => sum + event.contributorsCount, 0);
+  const totalContributors = MOCK_CONTRIBUTIONS.length; // Count from contributions instead
   const pendingPledges = MOCK_CONTRIBUTIONS.filter(c => c.isPledge && c.status === 'pending').length;
 
   return (
@@ -140,7 +58,7 @@ export default function DashboardPage() {
       <div className="container mx-auto px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-          <p className="text-muted-foreground">Manage all your fundraising events (public & private) and track contributions</p>
+          <p className="text-muted-foreground">Manage all your celebration events (weddings, birthdays, etc.) and track contributions from friends & family</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -209,7 +127,7 @@ export default function DashboardPage() {
                 <CardContent className="p-6">
                   <div className="flex gap-6">
                     <img
-                      src={event.coverImage}
+                      src={event.coverImage || "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800"}
                       alt={event.title}
                       className="w-32 h-32 object-cover rounded-lg"
                     />
