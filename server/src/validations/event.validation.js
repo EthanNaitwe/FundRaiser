@@ -12,7 +12,7 @@ const createEventSchema = z.object({
   organizerName: z.string().min(1, 'Organizer name is required').max(100, 'Organizer name too long'),
   organizerEmail: z.string().email('Invalid email format'),
   status: z.string().optional().default('active')
-});
+}).strict();
 
 const updateEventSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title too long').optional(),
@@ -25,7 +25,7 @@ const updateEventSchema = z.object({
   organizerName: z.string().min(1, 'Organizer name is required').max(100, 'Organizer name too long').optional(),
   organizerEmail: z.string().email('Invalid email format').optional(),
   status: z.string().optional()
-});
+}).strict();
 
 // Contribution validation schemas
 const createContributionSchema = z.object({
@@ -36,11 +36,11 @@ const createContributionSchema = z.object({
   isPledge: z.boolean().optional().default(false),
   message: z.string().max(500, 'Message too long').nullable().optional(),
   status: z.string().optional().default('pending')
-});
+}).strict();
 
 const updateContributionSchema = z.object({
   status: z.string().min(1, 'Status is required')
-});
+}).strict();
 
 // Validation middleware
 const validate = (schema) => {

@@ -1,20 +1,71 @@
-// Authentication middleware (for future use)
+// Authentication middleware
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
+const sheetsService = require('../services/sheets.service');
+const logger = require('../utils/logger');
 
 const auth = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
-      return res.status(401).json({ error: 'No token, authorization denied' });
+      return res.status(401).json({ 
+        error: 'Access denied', 
+        message: 'No token provided' 
+      });
     }
 
+    // Verify and decode the token
     const decoded = jwt.verify(token, config.jwt.secret);
+    
+    // Check if token is marked as valid
+    if (!decoded.isValid) {
+      logger.warn(`Invalid token used by user: ${decoded.email}`);
+      return res.status(401).json({ 
+        error: 'Access denied', 
+        message: 'Token has been invalidated' 
+      });
+    }
+
+    // Check if user session is still active
+    const sessions = await sheetsService.getAllRows('UserSessions');
+    const activeSession = sessions.find(session => 
+      session.sessionToken === token && 
+      session.isActive === true &&
+      session.userId === decoded.id
+    );
+
+    if (!activeSession) {
+      logger.warn(`Inactive session token used by user: ${decoded.email}`);
+      return res.status(401).json({ 
+        error: 'Access denied', 
+        message: 'Session has expired or been terminated' 
+      });
+    }
+
+    // Check if session has expired
+    if (new Date(activeSession.expiresAt) < new Date()) {
+      logger.warn(`Expired session token used by user: ${decoded.email}`);
+      // Mark session as inactive
+      await sheetsService.updateUserSession(activeSession.id, {
+        isActive: false,
+        updatedAt: new Date().toISOString()
+      });
+      return res.status(401).json({ 
+        error: 'Access denied', 
+        message: 'Session has expired' 
+      });
+    }
+
     req.user = decoded;
+    req.sessionId = activeSession.id;
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Token is not valid' });
+    logger.error('Auth middleware error:', error.message);
+    res.status(401).json({ 
+      error: 'Access denied', 
+      message: 'Invalid token' 
+    });
   }
 };
 
