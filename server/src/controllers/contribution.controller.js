@@ -5,7 +5,7 @@ const db = require('../config/db');
 const getContributionsByEventId = async (req, res) => {
   try {
     const eventId = req.params.eventId;
-    const contributions = db.findContributionsByEventId(eventId);
+    const contributions = await db.findContributionsByEventId(eventId);
     res.json(contributions);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch contributions' });
@@ -16,7 +16,7 @@ const getContributionsByEventId = async (req, res) => {
 const createContribution = async (req, res) => {
   try {
     const eventId = req.params.eventId;
-    const event = db.findEventById(eventId);
+    const event = await db.findEventById(eventId);
     
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
@@ -45,11 +45,11 @@ const createContribution = async (req, res) => {
       createdAt: new Date()
     };
 
-    const createdContribution = db.addContribution(newContribution);
+    const createdContribution = await db.addContribution(newContribution);
 
     // Update event's current amount if contribution is not a pledge and confirmed
     if (!isPledge && status === 'confirmed') {
-      db.updateEvent(eventId, { 
+      await db.updateEvent(eventId, { 
         currentAmount: event.currentAmount + amount 
       });
     }
@@ -66,7 +66,7 @@ const updateContribution = async (req, res) => {
     const contributionId = req.params.id;
     const { status } = req.body;
 
-    const contribution = db.findContributionById(contributionId);
+    const contribution = await db.findContributionById(contributionId);
     if (!contribution) {
       return res.status(404).json({ error: 'Contribution not found' });
     }
@@ -74,13 +74,13 @@ const updateContribution = async (req, res) => {
     const oldStatus = contribution.status;
     const isPledge = contribution.isPledge;
 
-    const updatedContribution = db.updateContribution(contributionId, { status });
+    const updatedContribution = await db.updateContribution(contributionId, { status });
 
     // Update event's current amount if status changed to confirmed
     if (status === 'confirmed' && oldStatus !== 'confirmed' && !isPledge) {
-      const event = db.findEventById(contribution.eventId);
+      const event = await db.findEventById(contribution.eventId);
       if (event) {
-        db.updateEvent(contribution.eventId, { 
+        await db.updateEvent(contribution.eventId, { 
           currentAmount: event.currentAmount + contribution.amount 
         });
       }

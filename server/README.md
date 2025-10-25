@@ -228,16 +228,33 @@ EMAIL_PASSWORD=your-app-password
 LOG_LEVEL=INFO
 ```
 
-## 🔧 **Configuration**
+## 📊 **Database: Google Sheets Integration**
 
-The application uses a centralized configuration system in `src/config/config.js`:
+This application uses **Google Sheets** as the database through the `googleapis` package. This provides:
 
-- **Environment settings**
-- **Database configuration**
-- **JWT settings**
-- **Email configuration**
-- **CORS settings**
-- **Rate limiting**
+- ✅ **No database setup required** - Uses Google Sheets
+- ✅ **Visual data management** - View/edit data directly in Sheets
+- ✅ **Automatic backup** - Google's built-in backup system
+- ✅ **Real-time collaboration** - Multiple users can view data
+- ✅ **Cost-effective** - No database hosting costs
+- ✅ **Easy deployment** - No database connection strings needed
+
+### Quick Setup
+
+1. **Follow the detailed setup guide**: [GOOGLE_SHEETS_SETUP.md](./GOOGLE_SHEETS_SETUP.md)
+2. **Create a Google Cloud project** and enable Sheets API
+3. **Create a service account** and download credentials
+4. **Create a Google Spreadsheet** and share with service account
+5. **Set environment variables** with your credentials
+6. **Start the server** - sheets will be created automatically
+
+### Environment Variables Required
+
+```bash
+GOOGLE_SHEETS_ID=your_spreadsheet_id
+GOOGLE_CLIENT_EMAIL=your_service_account_email
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+```
 
 ## 📦 **Dependencies**
 
@@ -248,6 +265,7 @@ The application uses a centralized configuration system in `src/config/config.js
 - `zod` - Schema validation
 - `dotenv` - Environment variables
 - `nodemailer` - Email service
+- `googleapis` - Google Sheets API integration
 
 ### Development Dependencies
 - `nodemon` - Development server

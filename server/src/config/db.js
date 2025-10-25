@@ -1,74 +1,117 @@
 // Database configuration and connection
-// Currently using in-memory storage, but ready for database integration
+// Using Google Sheets as the database
 
-const config = require('./config');
+const sheetsService = require('../services/sheets.service');
+const logger = require('../utils/logger');
 
-// In-memory storage (replace with database in production)
-let events = [];
-let contributions = [];
-
-// Database connection function (for future use)
+// Database connection function
 const connectDatabase = async () => {
   try {
-    // Add database connection logic here
-    // Example for MongoDB:
-    // const mongoose = require('mongoose');
-    // await mongoose.connect(config.database.url, config.database.options);
-    // console.log('✅ Database connected successfully');
-    
-    console.log('📝 Using in-memory storage (development mode)');
+    await sheetsService.initialize();
+    logger.info('✅ Google Sheets database connected successfully');
   } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
+    logger.error('❌ Database connection failed:', error.message);
     process.exit(1);
   }
 };
 
-// Data access functions
-const getEvents = () => events;
-const getContributions = () => contributions;
-
-const addEvent = (event) => {
-  events.push(event);
-  return event;
-};
-
-const addContribution = (contribution) => {
-  contributions.push(contribution);
-  return contribution;
-};
-
-const updateEvent = (id, updates) => {
-  const index = events.findIndex(e => e.id === id);
-  if (index !== -1) {
-    events[index] = { ...events[index], ...updates };
-    return events[index];
+// Data access functions using Google Sheets
+const getEvents = async () => {
+  try {
+    return await sheetsService.getAllEvents();
+  } catch (error) {
+    logger.error('Failed to get events:', error.message);
+    return [];
   }
-  return null;
 };
 
-const updateContribution = (id, updates) => {
-  const index = contributions.findIndex(c => c.id === id);
-  if (index !== -1) {
-    contributions[index] = { ...contributions[index], ...updates };
-    return contributions[index];
+const getContributions = async () => {
+  try {
+    return await sheetsService.getAllContributions();
+  } catch (error) {
+    logger.error('Failed to get contributions:', error.message);
+    return [];
   }
-  return null;
 };
 
-const deleteEvent = (id) => {
-  const index = events.findIndex(e => e.id === id);
-  if (index !== -1) {
-    events.splice(index, 1);
-    // Also delete related contributions
-    contributions = contributions.filter(c => c.eventId !== id);
-    return true;
+const addEvent = async (event) => {
+  try {
+    return await sheetsService.createEvent(event);
+  } catch (error) {
+    logger.error('Failed to add event:', error.message);
+    throw error;
   }
-  return false;
 };
 
-const findEventById = (id) => events.find(e => e.id === id);
-const findContributionById = (id) => contributions.find(c => c.id === id);
-const findContributionsByEventId = (eventId) => contributions.filter(c => c.eventId === eventId);
+const addContribution = async (contribution) => {
+  try {
+    return await sheetsService.createContribution(contribution);
+  } catch (error) {
+    logger.error('Failed to add contribution:', error.message);
+    throw error;
+  }
+};
+
+const updateEvent = async (id, updates) => {
+  try {
+    return await sheetsService.updateEvent(id, updates);
+  } catch (error) {
+    logger.error('Failed to update event:', error.message);
+    throw error;
+  }
+};
+
+const updateContribution = async (id, updates) => {
+  try {
+    return await sheetsService.updateContribution(id, updates);
+  } catch (error) {
+    logger.error('Failed to update contribution:', error.message);
+    throw error;
+  }
+};
+
+const deleteEvent = async (id) => {
+  try {
+    // First delete all related contributions
+    const contributions = await sheetsService.getContributionsByEventId(id);
+    for (const contribution of contributions) {
+      await sheetsService.deleteContribution(contribution.id);
+    }
+    
+    // Then delete the event
+    return await sheetsService.deleteEvent(id);
+  } catch (error) {
+    logger.error('Failed to delete event:', error.message);
+    throw error;
+  }
+};
+
+const findEventById = async (id) => {
+  try {
+    return await sheetsService.getEventById(id);
+  } catch (error) {
+    logger.error('Failed to find event by ID:', error.message);
+    return null;
+  }
+};
+
+const findContributionById = async (id) => {
+  try {
+    return await sheetsService.getContributionById(id);
+  } catch (error) {
+    logger.error('Failed to find contribution by ID:', error.message);
+    return null;
+  }
+};
+
+const findContributionsByEventId = async (eventId) => {
+  try {
+    return await sheetsService.getContributionsByEventId(eventId);
+  } catch (error) {
+    logger.error('Failed to find contributions by event ID:', error.message);
+    return [];
+  }
+};
 
 module.exports = {
   connectDatabase,

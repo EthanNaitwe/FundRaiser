@@ -4,8 +4,9 @@ const db = require('../config/db');
 // Get all public events
 const getAllEvents = async (req, res) => {
   try {
-    const events = db.getEvents().filter(event => event.isPublic);
-    res.json(events);
+    const events = await db.getEvents();
+    const publicEvents = events.filter(event => event.isPublic);
+    res.json(publicEvents);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch events' });
   }
@@ -14,7 +15,7 @@ const getAllEvents = async (req, res) => {
 // Get specific event by ID
 const getEventById = async (req, res) => {
   try {
-    const event = db.findEventById(req.params.id);
+    const event = await db.findEventById(req.params.id);
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
     }
@@ -56,7 +57,7 @@ const createEvent = async (req, res) => {
       createdAt: new Date()
     };
 
-    const createdEvent = db.addEvent(newEvent);
+    const createdEvent = await db.addEvent(newEvent);
     res.status(201).json(createdEvent);
   } catch (error) {
     res.status(500).json({ error: 'Failed to create event' });
@@ -74,7 +75,7 @@ const updateEvent = async (req, res) => {
       updates.deadline = new Date(updates.deadline);
     }
 
-    const updatedEvent = db.updateEvent(eventId, updates);
+    const updatedEvent = await db.updateEvent(eventId, updates);
     if (!updatedEvent) {
       return res.status(404).json({ error: 'Event not found' });
     }
@@ -89,7 +90,7 @@ const updateEvent = async (req, res) => {
 const deleteEvent = async (req, res) => {
   try {
     const eventId = req.params.id;
-    const deleted = db.deleteEvent(eventId);
+    const deleted = await db.deleteEvent(eventId);
     
     if (!deleted) {
       return res.status(404).json({ error: 'Event not found' });
