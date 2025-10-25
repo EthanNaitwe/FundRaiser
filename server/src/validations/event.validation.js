@@ -1,0 +1,73 @@
+const { z } = require('zod');
+
+// Event validation schemas
+const createEventSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
+  description: z.string().min(1, 'Description is required').max(2000, 'Description too long'),
+  goalAmount: z.number().positive('Goal amount must be positive'),
+  coverImage: z.string().url('Invalid image URL').nullable().optional(),
+  location: z.string().max(200, 'Location too long').nullable().optional(),
+  deadline: z.string().datetime('Invalid deadline format').nullable().optional(),
+  isPublic: z.boolean().optional().default(true),
+  organizerName: z.string().min(1, 'Organizer name is required').max(100, 'Organizer name too long'),
+  organizerEmail: z.string().email('Invalid email format'),
+  status: z.string().optional().default('active')
+});
+
+const updateEventSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200, 'Title too long').optional(),
+  description: z.string().min(1, 'Description is required').max(2000, 'Description too long').optional(),
+  goalAmount: z.number().positive('Goal amount must be positive').optional(),
+  coverImage: z.string().url('Invalid image URL').nullable().optional(),
+  location: z.string().max(200, 'Location too long').nullable().optional(),
+  deadline: z.string().datetime('Invalid deadline format').nullable().optional(),
+  isPublic: z.boolean().optional(),
+  organizerName: z.string().min(1, 'Organizer name is required').max(100, 'Organizer name too long').optional(),
+  organizerEmail: z.string().email('Invalid email format').optional(),
+  status: z.string().optional()
+});
+
+// Contribution validation schemas
+const createContributionSchema = z.object({
+  donorName: z.string().min(1, 'Donor name is required').max(100, 'Donor name too long'),
+  donorEmail: z.string().email('Invalid email format'),
+  amount: z.number().positive('Amount must be positive'),
+  isAnonymous: z.boolean().optional().default(false),
+  isPledge: z.boolean().optional().default(false),
+  message: z.string().max(500, 'Message too long').nullable().optional(),
+  status: z.string().optional().default('pending')
+});
+
+const updateContributionSchema = z.object({
+  status: z.string().min(1, 'Status is required')
+});
+
+// Validation middleware
+const validate = (schema) => {
+  return (req, res, next) => {
+    try {
+      const validatedData = schema.parse(req.body);
+      req.body = validatedData;
+      next();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        });
+      }
+      next(error);
+    }
+  };
+};
+
+module.exports = {
+  createEventSchema,
+  updateEventSchema,
+  createContributionSchema,
+  updateContributionSchema,
+  validate
+};
