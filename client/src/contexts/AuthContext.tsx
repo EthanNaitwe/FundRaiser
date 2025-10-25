@@ -12,12 +12,14 @@ interface AuthContextType {
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     //todo: remove mock functionality - check for stored auth token
@@ -25,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+    setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -63,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signup,
       logout,
       isAuthenticated: !!user,
+      isLoading,
     }}>
       {children}
     </AuthContext.Provider>

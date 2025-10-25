@@ -1,78 +1,13 @@
 import { useState } from "react";
 import EventCard from "@/components/EventCard";
-import { Event } from "@shared/schema";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Search, Heart, Users, DollarSign, TrendingUp, Star, ArrowRight, Plus, Target } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import eventImage1 from '@assets/stock_images/community_charity_ev_97ad4e3e.jpg';
-import eventImage2 from '@assets/stock_images/medical_fundraising__0361a3be.jpg';
-import eventImage3 from '@assets/stock_images/environmental_conser_a6d5db4e.jpg';
-import eventImage4 from '@assets/stock_images/disaster_relief_emer_a62b03c5.jpg';
-
-//todo: remove mock functionality
-const MOCK_EVENTS: Event[] = [
-  {
-    id: '1',
-    title: 'Support Local School Library',
-    description: 'Help us build a modern library for our community school to give children access to books and digital resources.',
-    goalAmount: 10000,
-    currentAmount: 6500,
-    coverImage: eventImage1,
-    location: 'Springfield Elementary',
-    deadline: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-    isPublic: true,
-    organizerName: 'Sarah Johnson',
-    organizerEmail: 'sarah@example.com',
-    status: 'active',
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: '2',
-    title: 'Medical Equipment for Community Clinic',
-    description: 'Our local clinic needs updated medical equipment to serve the community better. Every donation helps save lives.',
-    goalAmount: 25000,
-    currentAmount: 18750,
-    coverImage: eventImage2,
-    location: 'Community Health Center',
-    deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    isPublic: true,
-    organizerName: 'Dr. Michael Chen',
-    organizerEmail: 'michael@example.com',
-    status: 'active',
-    createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: '3',
-    title: 'Wildlife Conservation Project',
-    description: 'Support our efforts to protect endangered species and preserve their natural habitats for future generations.',
-    goalAmount: 15000,
-    currentAmount: 15200,
-    coverImage: eventImage3,
-    location: 'National Park',
-    deadline: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    isPublic: true,
-    organizerName: 'Emma Wildlife Foundation',
-    organizerEmail: 'emma@example.com',
-    status: 'completed',
-    createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: '4',
-    title: 'Emergency Disaster Relief Fund',
-    description: 'Provide immediate assistance to families affected by recent natural disasters. Your contribution provides shelter, food, and medical aid.',
-    goalAmount: 50000,
-    currentAmount: 28000,
-    coverImage: eventImage4,
-    location: 'Multiple Locations',
-    deadline: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
-    isPublic: true,
-    organizerName: 'Disaster Relief Org',
-    organizerEmail: 'relief@example.com',
-    status: 'active',
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-  },
-];
+import { MOCK_EVENTS } from "@/data/mockData";
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -102,47 +37,194 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="bg-gradient-to-b from-primary/5 to-background py-12">
+      {/* Hero Section - Full Height */}
+      <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-primary/5">
         <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold">Make a Difference Today</h1>
-            <p className="text-lg text-muted-foreground">
-              Discover fundraising events and support causes that matter to you
-            </p>
-            <div className="relative max-w-md mx-auto mt-6">
-              <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search events..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-12"
-                data-testid="input-search"
-              />
+          <div className="max-w-5xl mx-auto text-center space-y-12">
+            <div className="space-y-8">
+              <Badge variant="secondary" className="px-6 py-3 text-base">
+                <Heart className="w-5 h-5 mr-2" />
+                Trusted by 25,000+ couples and families
+              </Badge>
+              <h1 className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent leading-tight">
+                Fund Your
+                <br />
+                Special Moments
+              </h1>
+              <p className="text-2xl md:text-3xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
+                Let your loved ones help make your wedding, birthday, or special celebration unforgettable. 
+                Create beautiful fundraisers and invite friends & family to contribute to your dreams.
+              </p>
+            </div>
+            
+            <div className="flex flex-wrap justify-center gap-12 pt-8">
+              <div className="flex items-center gap-3 text-muted-foreground">
+                <Users className="w-6 h-6" />
+                <span className="text-lg font-medium">50K+ Contributors</span>
+              </div>
+              <div className="flex items-center gap-3 text-muted-foreground">
+                <DollarSign className="w-6 h-6" />
+                <span className="text-lg font-medium">$5M+ Raised</span>
+              </div>
+              <div className="flex items-center gap-3 text-muted-foreground">
+                <TrendingUp className="w-6 h-6" />
+                <span className="text-lg font-medium">98% Success Rate</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="container mx-auto px-4 py-12">
-        <h2 className="text-2xl font-semibold mb-6">Public Fundraising Events</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              onViewDetails={handleViewDetails}
-              onShare={handleShare}
-            />
-          ))}
-        </div>
-        
-        {filteredEvents.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">No events found matching your search.</p>
+      {/* Impact Statistics */}
+      <section className="py-20 bg-gradient-to-r from-primary/5 to-background">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center space-y-12">
+            <div className="space-y-4">
+              <h2 className="text-3xl md:text-4xl font-bold">Celebrating Together</h2>
+              <p className="text-lg text-muted-foreground">
+                See how families and friends are making special moments unforgettable
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <div className="text-center space-y-2">
+                <div className="text-3xl md:text-4xl font-bold text-primary">25,000+</div>
+                <div className="text-sm text-muted-foreground">Happy Couples</div>
+              </div>
+              <div className="text-center space-y-2">
+                <div className="text-3xl md:text-4xl font-bold text-primary">8,500+</div>
+                <div className="text-sm text-muted-foreground">Successful Events</div>
+              </div>
+              <div className="text-center space-y-2">
+                <div className="text-3xl md:text-4xl font-bold text-primary">$5M+</div>
+                <div className="text-sm text-muted-foreground">Total Raised</div>
+              </div>
+              <div className="text-center space-y-2">
+                <div className="text-3xl md:text-4xl font-bold text-primary">99%</div>
+                <div className="text-sm text-muted-foreground">Happy Contributors</div>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      </section>
+
+      {/* Featured Events */}
+      {false && <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto space-y-12">
+            <div className="text-center space-y-4">
+              <h2 className="text-3xl md:text-4xl font-bold">Featured Celebrations</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Discover beautiful events and celebrations happening now
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredEvents.slice(0, 3).map((event) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  onViewDetails={handleViewDetails}
+                  onShare={handleShare}
+                />
+              ))}
+            </div>
+            
+            <div className="text-center">
+              <Button variant="outline" size="lg" className="px-8">
+                View All Events
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>}
+
+      {/* Call to Action */}
+      {false && <section className="py-20 bg-gradient-to-r from-primary/10 to-primary/5">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <div className="space-y-4">
+              <h2 className="text-3xl md:text-4xl font-bold">Ready to Celebrate?</h2>
+              <p className="text-lg text-muted-foreground">
+                Whether you're planning your special day or want to support someone's celebration, 
+                we're here to help make every moment unforgettable.
+              </p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" className="h-14 px-8 text-lg">
+                <Plus className="w-5 h-5 mr-2" />
+                Create Your Event
+              </Button>
+              <Button variant="outline" size="lg" className="h-14 px-8 text-lg">
+                Browse All Events
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>}
+
+      {/* Testimonials */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto space-y-12">
+            <div className="text-center space-y-4">
+              <h2 className="text-3xl md:text-4xl font-bold">What Our Community Says</h2>
+              <p className="text-lg text-muted-foreground">
+                Real stories from couples and families celebrating their special moments
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <Card className="p-6">
+                <CardContent className="p-0 space-y-4">
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                  <p className="text-muted-foreground">
+                    "This platform made our wedding fundraising so easy! Our friends and family 
+                    loved being able to contribute to our special day."
+                  </p>
+                  <div className="text-sm font-medium">Sarah & Michael</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="p-6">
+                <CardContent className="p-0 space-y-4">
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                  <p className="text-muted-foreground">
+                    "I've contributed to several birthday parties and weddings here. It's so 
+                    convenient and I love seeing how happy the celebrations turn out!"
+                  </p>
+                  <div className="text-sm font-medium">Jennifer R.</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="p-6">
+                <CardContent className="p-0 space-y-4">
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                  <p className="text-muted-foreground">
+                    "The updates and photos from the events make me feel connected to the 
+                    celebrations even when I can't be there in person."
+                  </p>
+                  <div className="text-sm font-medium">David L.</div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
