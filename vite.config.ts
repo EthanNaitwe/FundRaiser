@@ -20,9 +20,15 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
-    // Vite handles SPA routing automatically in development
+    port: 3000,
+    proxy: {
+      "/api": {
+        target: "http://localhost:5000",
+        changeOrigin: true,
+      },
+    },
   },
   preview: {
-    // Vite handles SPA routing automatically in preview
+    port: 3000,
   },
 });
