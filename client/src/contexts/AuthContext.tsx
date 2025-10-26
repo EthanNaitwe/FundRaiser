@@ -4,12 +4,13 @@ interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, phone: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -42,13 +43,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("user", JSON.stringify(mockUser));
   };
 
-  const signup = async (name: string, email: string, password: string) => {
+  const signup = async (name: string, email: string, phone: string, password: string) => {
     //todo: remove mock functionality - replace with actual API call
-    console.log('Signup attempt:', name, email);
+    console.log('Signup attempt:', name, email, phone);
     const mockUser = {
       id: Math.random().toString(36).substring(7),
       name,
       email,
+      phone,
     };
     setUser(mockUser);
     localStorage.setItem("user", JSON.stringify(mockUser));
