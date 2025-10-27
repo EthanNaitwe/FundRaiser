@@ -81,22 +81,9 @@ class AuthController {
       logger.info(`User data prepared for: ${email}`);
 
       // Save user to Google Sheets
+      logger.info(`Attempting to save user to Google Sheets: ${email}`);
       const createdUser = await sheetsService.createUser(userData);
-      logger.info(`User created successfully: ${email}`);
-
-      // Create login log
-      await sheetsService.createLoginLog({
-        id: uuidv4(),
-        userId: userData.id,
-        email: userData.email,
-        ipAddress: req.ip || req.connection.remoteAddress,
-        userAgent: req.get('User-Agent') || 'Unknown',
-        loginMethod: 'registration',
-        status: 'success',
-        failureReason: null,
-        location: null,
-        createdAt: new Date().toISOString()
-      });
+      logger.info(`User created successfully in sheets: ${email}`, { userId: createdUser.id });
 
       // Generate JWT token
       const token = jwt.sign(
@@ -109,25 +96,58 @@ class AuthController {
         config.jwt.secret,
         { expiresIn: config.jwt.expiresIn }
       );
+      logger.info(`JWT token generated for: ${email}`);
 
-      // Create user session
-      await sheetsService.createUserSession({
-        id: uuidv4(),
-        userId: userData.id,
-        sessionToken: token,
-        ipAddress: req.ip || req.connection.remoteAddress,
-        userAgent: req.get('User-Agent') || 'Unknown',
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
-        isActive: true,
-        createdAt: new Date().toISOString()
-      });
+      // Create login log (non-blocking - don't fail registration if this fails)
+      try {
+        await sheetsService.createLoginLog({
+          id: uuidv4(),
+          userId: userData.id,
+          email: userData.email,
+          ipAddress: req.ip || req.connection.remoteAddress,
+          userAgent: req.get('User-Agent') || 'Unknown',
+          loginMethod: 'registration',
+          status: 'success',
+          failureReason: null,
+          location: null,
+          createdAt: new Date().toISOString()
+        });
+        logger.info(`Login log created for: ${email}`);
+      } catch (logError) {
+        logger.error('Failed to create login log:', logError.message);
+        // Continue with registration even if log fails
+      }
+
+      // Create user session (non-blocking - don't fail registration if this fails)
+      try {
+        await sheetsService.createUserSession({
+          id: uuidv4(),
+          userId: userData.id,
+          sessionToken: token,
+          ipAddress: req.ip || req.connection.remoteAddress,
+          userAgent: req.get('User-Agent') || 'Unknown',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+          isActive: true,
+          createdAt: new Date().toISOString()
+        });
+        logger.info(`User session created for: ${email}`);
+      } catch (sessionError) {
+        logger.error('Failed to create user session:', sessionError.message);
+        // Continue with registration even if session creation fails
+      }
 
       // Remove password from response
       const { password: _, ...userResponse } = userData;
 
-      // Send verification email
-      const verificationLink = `${config.frontendUrl || 'http://localhost:5173'}/verify-email?token=${verificationToken}`;
-      await emailService.sendVerificationEmail(email, verificationLink);
+      // Send verification email (non-blocking - don't fail registration if this fails)
+      try {
+        const verificationLink = `${config.frontendUrl || 'http://localhost:5173'}/verify-email?token=${verificationToken}`;
+        await emailService.sendVerificationEmail(email, verificationLink);
+        logger.info(`Verification email sent to: ${email}`);
+      } catch (emailError) {
+        logger.error('Failed to send verification email:', emailError.message);
+        // Continue with registration even if email fails
+      }
 
       logger.info(`New user registered successfully: ${email}`);
 
@@ -140,7 +160,6 @@ class AuthController {
 
     } catch (error) {
       logger.error('Registration error:', error.message);
-      logger.error('Registration error stack:', error.stack);
       res.status(500).json({
         error: 'Registration failed',
         message: 'An error occurred while creating your account'

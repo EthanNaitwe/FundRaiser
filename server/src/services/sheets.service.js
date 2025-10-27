@@ -20,17 +20,34 @@ class GoogleSheetsService {
   // Generic method to get all rows from a sheet
   async getAllRows(sheetName) {
     try {
+      // Check if sheets service is initialized
+      if (!this.sheets) {
+        logger.error('Google Sheets service not initialized');
+        throw new Error('Google Sheets service not initialized. Please ensure the service is properly set up.');
+      }
+
+      // Check if spreadsheet ID is set
+      if (!this.spreadsheetId) {
+        logger.error('Spreadsheet ID not configured');
+        throw new Error('Spreadsheet ID not configured');
+      }
+
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
         range: `${sheetName}!A:Z`
       });
 
       const rows = response.data.values || [];
-      if (rows.length === 0) return [];
+      if (rows.length === 0) {
+        logger.info(`No rows found in ${sheetName}`);
+        return [];
+      }
 
       // Skip header row
       const dataRows = rows.slice(1);
       const headers = rows[0];
+
+      logger.info(`Retrieved ${dataRows.length} rows from ${sheetName}`);
 
       // Convert rows to objects
       return dataRows.map(row => {
@@ -64,6 +81,18 @@ class GoogleSheetsService {
   // Generic method to add a row to a sheet
   async addRow(sheetName, data) {
     try {
+      // Check if sheets service is initialized
+      if (!this.sheets) {
+        logger.error('Google Sheets service not initialized');
+        throw new Error('Google Sheets service not initialized. Please ensure the service is properly set up.');
+      }
+
+      // Check if spreadsheet ID is set
+      if (!this.spreadsheetId) {
+        logger.error('Spreadsheet ID not configured');
+        throw new Error('Spreadsheet ID not configured');
+      }
+
       let headers;
       
       // Determine headers based on sheet name
@@ -99,6 +128,7 @@ class GoogleSheetsService {
           headers = sheetsConfig.paymentMethodsHeaders;
           break;
         default:
+          logger.error(`Unknown sheet: ${sheetName}`);
           throw new Error(`Unknown sheet: ${sheetName}`);
       }
 
@@ -118,16 +148,31 @@ class GoogleSheetsService {
         return value;
       });
 
+      // Calculate end column letter (handle beyond Z if needed)
+      const getColumnLetter = (num) => {
+        let letter = '';
+        while (num > 0) {
+          const remainder = (num - 1) % 26;
+          letter = String.fromCharCode(65 + remainder) + letter;
+          num = Math.floor((num - 1) / 26);
+        }
+        return letter;
+      };
+      
+      const endColumn = getColumnLetter(headers.length);
+      const range = `${sheetName}!A:${endColumn}`;
+      
       await this.sheets.spreadsheets.values.append({
         spreadsheetId: this.spreadsheetId,
-        range: `${sheetName}!A:Z`,
+        range: range,
         valueInputOption: 'RAW',
+        insertDataOption: 'INSERT_ROWS',
         resource: {
           values: [row]
         }
       });
 
-      logger.info(`Added row to ${sheetName}`);
+      logger.info(`Successfully added row to ${sheetName}`);
       return data;
     } catch (error) {
       logger.error(`Failed to add row to ${sheetName}:`, error.message);
