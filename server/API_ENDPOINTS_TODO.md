@@ -36,8 +36,8 @@ This document contains all the API endpoints that need to be implemented for the
 - [x] `POST /api/events` - Create new event (authenticated) *(Already implemented)*
 - [x] `PUT /api/events/:id` - Update event (organizer/admin only) *(Already implemented)*
 - [x] `DELETE /api/events/:id` - Delete event (organizer/admin only) *(Already implemented)*
-- [ ] `GET /api/events/user/:userId` - Get events by user
-- [ ] `GET /api/events/search` - Search events with filters
+- [x] `GET /api/events/user/:userId` - Get events by user *(Just implemented)*
+- [x] `GET /api/events/search` - Search events with filters *(Just implemented)*
 
 ### Event Updates & Announcements
 - [ ] `GET /api/events/:id/updates` - Get event updates

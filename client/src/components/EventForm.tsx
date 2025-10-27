@@ -73,12 +73,12 @@ export default function EventForm({ onSubmit }: EventFormProps) {
       title: data.title,
       description: data.description,
       goalAmount: data.goalAmount, // Already a number from the schema
-      location: data.location,
-      deadline: data.deadline,
+      location: data.location || undefined,
+      deadline: data.deadline ? data.deadline.toISOString() : undefined,
       isPublic: data.isPublic,
       organizerName: data.organizerName,
       organizerEmail: data.organizerEmail,
-      coverImage: data.coverImage,
+      coverImage: data.coverImage || undefined,
       status: 'active',
     };
     console.log('Event created:', eventData);

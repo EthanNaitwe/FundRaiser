@@ -102,10 +102,63 @@ const deleteEvent = async (req, res) => {
   }
 };
 
+// Get events by user
+const getEventsByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const events = await db.getEvents();
+    
+    // Filter events by organizerEmail (assuming userId is email)
+    const userEvents = events.filter(event => event.organizerEmail === userId);
+    
+    res.json(userEvents);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch user events' });
+  }
+};
+
+// Search events with filters
+const searchEvents = async (req, res) => {
+  try {
+    const { q, location, status } = req.query;
+    let events = await db.getEvents();
+    
+    // Apply filters
+    if (q) {
+      const searchTerm = q.toLowerCase();
+      events = events.filter(event => 
+        event.title.toLowerCase().includes(searchTerm) ||
+        event.description.toLowerCase().includes(searchTerm) ||
+        event.organizerName.toLowerCase().includes(searchTerm)
+      );
+    }
+    
+    if (location) {
+      const locationTerm = location.toLowerCase();
+      events = events.filter(event => 
+        event.location && event.location.toLowerCase().includes(locationTerm)
+      );
+    }
+    
+    if (status) {
+      events = events.filter(event => event.status === status);
+    }
+    
+    // Only return public events
+    const publicEvents = events.filter(event => event.isPublic);
+    
+    res.json(publicEvents);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to search events' });
+  }
+};
+
 module.exports = {
   getAllEvents,
   getEventById,
   createEvent,
   updateEvent,
-  deleteEvent
+  deleteEvent,
+  getEventsByUser,
+  searchEvents
 };
