@@ -40,10 +40,10 @@ This document contains all the API endpoints that need to be implemented for the
 - [x] `GET /api/events/search` - Search events with filters *(Just implemented)*
 
 ### Event Updates & Announcements
-- [ ] `GET /api/events/:id/updates` - Get event updates
-- [ ] `POST /api/events/:id/updates` - Create event update (organizer only)
-- [ ] `PUT /api/events/:id/updates/:updateId` - Update event update (organizer only)
-- [ ] `DELETE /api/events/:id/updates/:updateId` - Delete event update (organizer only)
+- [x] `GET /api/events/:id/updates` - Get event updates *(Just implemented)*
+- [x] `POST /api/events/:id/updates` - Create event update (organizer only) *(Just implemented)*
+- [x] `PUT /api/events/:id/updates/:updateId` - Update event update (organizer only) *(Just implemented)*
+- [x] `DELETE /api/events/:id/updates/:updateId` - Delete event update (organizer only) *(Just implemented)*
 
 ## 💰 Contributions & Payments
 

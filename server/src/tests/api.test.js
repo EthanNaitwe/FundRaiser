@@ -60,7 +60,7 @@ describe('API Tests - Event CRUD Operations', () => {
       expect(response.body.organizerEmail).toBe(eventData.organizerEmail);
       expect(response.body.id).toBeDefined();
       expect(response.body.createdAt).toBeDefined();
-      
+
       testEventId = response.body.id;
     });
 
@@ -182,7 +182,7 @@ describe('API Tests - Event CRUD Operations', () => {
       expect(response.body.amount).toBe(contributionData.amount);
       expect(response.body.donorName).toBe(contributionData.donorName);
       expect(response.body.id).toBeDefined();
-      
+
       testContributionId = response.body.id;
     });
 

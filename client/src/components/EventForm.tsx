@@ -31,8 +31,6 @@ const eventFormSchema = z.object({
   location: z.string().optional(),
   deadline: z.date().optional(),
   isPublic: z.boolean(),
-  organizerName: z.string().min(2, "Organizer name must be at least 2 characters"),
-  organizerEmail: z.string().email("Please enter a valid email address"),
   coverImage: z.string().optional().refine((val) => {
     if (!val || val === "") return true; // Allow empty string
     try {
@@ -61,8 +59,6 @@ export default function EventForm({ onSubmit }: EventFormProps) {
       location: "",
       deadline: undefined,
       isPublic: true,
-      organizerName: "",
-      organizerEmail: "",
       coverImage: "",
     },
   });
@@ -76,8 +72,6 @@ export default function EventForm({ onSubmit }: EventFormProps) {
       location: data.location || undefined,
       deadline: data.deadline ? data.deadline.toISOString() : undefined,
       isPublic: data.isPublic,
-      organizerName: data.organizerName,
-      organizerEmail: data.organizerEmail,
       coverImage: data.coverImage || undefined,
       status: 'active',
     };
@@ -240,45 +234,6 @@ export default function EventForm({ onSubmit }: EventFormProps) {
                   </FormItem>
                 )}
               />
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="organizerName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Your Name *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Jane Smith"
-                          {...field}
-                          data-testid="input-organizer-name"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="organizerEmail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Your Email *</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="jane@example.com"
-                          {...field}
-                          data-testid="input-organizer-email"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
 
               <FormField
                 control={form.control}

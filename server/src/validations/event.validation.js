@@ -9,8 +9,6 @@ const createEventSchema = z.object({
   location: z.string().max(200, 'Location too long').optional(),
   deadline: z.string().datetime('Invalid deadline format').optional(),
   isPublic: z.boolean().optional().default(true),
-  organizerName: z.string().min(2, 'Organizer name must be at least 2 characters').max(100, 'Organizer name too long'),
-  organizerEmail: z.string().email('Invalid email format'),
   status: z.string().optional().default('active')
 }).strict();
 
@@ -42,6 +40,21 @@ const updateContributionSchema = z.object({
   status: z.string().min(1, 'Status is required')
 }).strict();
 
+// Event Update validation schemas
+const createEventUpdateSchema = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters').max(200, 'Title too long'),
+  content: z.string().min(10, 'Content must be at least 10 characters').max(5000, 'Content too long'),
+  images: z.string().optional(),
+  isPublic: z.boolean().optional().default(true)
+}).strict();
+
+const updateEventUpdateSchema = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters').max(200, 'Title too long').optional(),
+  content: z.string().min(10, 'Content must be at least 10 characters').max(5000, 'Content too long').optional(),
+  images: z.string().optional(),
+  isPublic: z.boolean().optional()
+}).strict();
+
 // Validation middleware
 const validate = (schema) => {
   return (req, res, next) => {
@@ -69,5 +82,7 @@ module.exports = {
   updateEventSchema,
   createContributionSchema,
   updateContributionSchema,
+  createEventUpdateSchema,
+  updateEventUpdateSchema,
   validate
 };
