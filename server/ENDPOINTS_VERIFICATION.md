@@ -246,4 +246,3 @@ Currently missing (marked in API_ENDPOINTS_TODO.md):
 ## ✅ Conclusion
 
 All event CRUD endpoints are **fully implemented and working correctly**. The validation schema has been updated to match the frontend requirements, and the endpoints are ready for integration with the client application.
-

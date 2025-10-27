@@ -100,16 +100,32 @@ const updateEvent = async (req, res) => {
     const eventId = req.params.id;
     const updates = req.body;
 
+    // Get the event to check ownership
+    const event = await db.findEventById(eventId);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Get the logged-in user
+    const user = await sheetsService.getUserById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user is the organizer or an admin
+    if (event.organizerEmail !== user.email && user.role !== 'admin') {
+      return res.status(403).json({ 
+        error: 'Forbidden', 
+        message: 'Only the event organizer or an admin can update this event' 
+      });
+    }
+
     // Convert deadline string to Date if provided
     if (updates.deadline) {
       updates.deadline = new Date(updates.deadline);
     }
 
     const updatedEvent = await db.updateEvent(eventId, updates);
-    if (!updatedEvent) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-
     res.json(updatedEvent);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update event' });
@@ -120,21 +136,52 @@ const updateEvent = async (req, res) => {
 const deleteEvent = async (req, res) => {
   try {
     const eventId = req.params.id;
-    const deleted = await db.deleteEvent(eventId);
 
-    if (!deleted) {
+    // Get the event to check ownership
+    const event = await db.findEventById(eventId);
+    if (!event) {
       return res.status(404).json({ error: 'Event not found' });
     }
 
+    // Get the logged-in user
+    const user = await sheetsService.getUserById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user is the organizer or an admin
+    if (event.organizerEmail !== user.email && user.role !== 'admin') {
+      return res.status(403).json({ 
+        error: 'Forbidden', 
+        message: 'Only the event organizer or an admin can delete this event' 
+      });
+    }
+
+    const deleted = await db.deleteEvent(eventId);
     res.json({ message: 'Event deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete event' });
   }
 };
 
-// Get events by user
+// Get events by user (admin only)
 const getEventsByUser = async (req, res) => {
   try {
+    // Get the logged-in user
+    const user = await sheetsService.getUserById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user is an admin
+    if (user.role !== 'admin') {
+      return res.status(403).json({ 
+        error: 'Forbidden', 
+        message: 'Only administrators can view events by user' 
+      });
+    }
+
     const { userId } = req.params;
     const events = await db.getEvents();
 
@@ -147,13 +194,31 @@ const getEventsByUser = async (req, res) => {
   }
 };
 
-// Search events with filters
+// Search events with filters (authenticated users only)
 const searchEvents = async (req, res) => {
   try {
     const { q, location, status } = req.query;
+
+    // Get the logged-in user
+    const user = await sheetsService.getUserById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get all events
     let events = await db.getEvents();
 
-    // Apply filters
+    // Filter by user role
+    if (user.role === 'admin') {
+      // Admins can search through all events
+      // Don't filter by organizer
+    } else {
+      // Organizers can only search their own events
+      events = events.filter(event => event.organizerEmail === user.email);
+    }
+
+    // Apply search filters
     if (q) {
       const searchTerm = q.toLowerCase();
       events = events.filter(event =>
@@ -174,10 +239,7 @@ const searchEvents = async (req, res) => {
       events = events.filter(event => event.status === status);
     }
 
-    // Only return public events
-    const publicEvents = events.filter(event => event.isPublic);
-
-    res.json(publicEvents);
+    res.json(events);
   } catch (error) {
     res.status(500).json({ error: 'Failed to search events' });
   }

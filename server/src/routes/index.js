@@ -21,12 +21,12 @@ router.use('/', authRoutes);
 
 // Event routes
 router.get('/events', auth, eventController.getAllEvents);
-router.get('/events/search', eventController.searchEvents);
-router.get('/events/user/:userId', eventController.getEventsByUser);
-router.get('/events/:id', eventController.getEventById);
+router.get('/events/search', auth, eventController.searchEvents);
+router.get('/events/user/:userId', auth, eventController.getEventsByUser);
+router.get('/events/:id', auth, eventController.getEventById);
 router.post('/events', auth, validate(createEventSchema), eventController.createEvent);
-router.put('/events/:id', validate(updateEventSchema), eventController.updateEvent);
-router.delete('/events/:id', eventController.deleteEvent);
+router.put('/events/:id', auth, validate(updateEventSchema), eventController.updateEvent);
+router.delete('/events/:id', auth, eventController.deleteEvent);
 
 // Contribution routes
 router.get('/events/:eventId/contributions', contributionController.getContributionsByEventId);
