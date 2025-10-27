@@ -2,12 +2,21 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('../config/db');
 const sheetsService = require('../services/sheets.service');
 
-// Get all public events
+// Get all events for logged-in user
 const getAllEvents = async (req, res) => {
   try {
+    // Get the logged-in user's email
+    const user = await sheetsService.getUserById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get all events and filter by the logged-in user's email
     const events = await db.getEvents();
-    const publicEvents = events.filter(event => event.isPublic);
-    res.json(publicEvents);
+    const userEvents = events.filter(event => event.organizerEmail === user.email);
+
+    res.json(userEvents);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch events' });
   }

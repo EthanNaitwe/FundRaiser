@@ -20,7 +20,7 @@ const router = express.Router();
 router.use('/', authRoutes);
 
 // Event routes
-router.get('/events', eventController.getAllEvents);
+router.get('/events', auth, eventController.getAllEvents);
 router.get('/events/search', eventController.searchEvents);
 router.get('/events/user/:userId', eventController.getEventsByUser);
 router.get('/events/:id', eventController.getEventById);

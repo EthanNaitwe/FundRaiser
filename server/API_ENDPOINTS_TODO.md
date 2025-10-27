@@ -31,7 +31,7 @@ This document contains all the API endpoints that need to be implemented for the
 ## 🎯 Events Management
 
 ### Event CRUD Operations
-- [x] `GET /api/events` - Get all public events *(Already implemented)*
+- [x] `GET /api/events` - Get all events for logged-in user (authenticated) *(Modified)*
 - [x] `GET /api/events/:id` - Get specific event *(Already implemented)*
 - [x] `POST /api/events` - Create new event (authenticated) *(Already implemented)*
 - [x] `PUT /api/events/:id` - Update event (organizer/admin only) *(Already implemented)*
