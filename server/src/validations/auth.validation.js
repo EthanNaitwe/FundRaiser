@@ -91,6 +91,18 @@ const resetPasswordSchema = z.object({
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number'),
 }).strict();
 
+// Verify email validation schema
+const verifyEmailSchema = z.object({
+  token: z.string()
+    .min(1, 'Verification token is required'),
+}).strict();
+
+// Resend verification validation schema
+const resendVerificationSchema = z.object({
+  email: z.string()
+    .email('Invalid email format'),
+}).strict();
+
 // Validation middleware
 const validate = (schema) => {
   return (req, res, next) => {
@@ -120,5 +132,7 @@ module.exports = {
   updateProfileSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  verifyEmailSchema,
+  resendVerificationSchema,
   validate
 };

@@ -67,6 +67,10 @@ const sheetsConfig = {
     'isVerified',
     'isActive',
     'lastLogin',
+    'emailVerificationToken',
+    'emailVerificationExpires',
+    'passwordResetToken',
+    'passwordResetExpires',
     'createdAt',
     'updatedAt'
   ],
