@@ -36,7 +36,7 @@ All event CRUD endpoints (including search, user filtering, and event updates) a
 - **Status**: Implemented & Protected
 - **Purpose**: Create new event (authenticated users only)
 - **Route**: Line 27 in `src/routes/index.js`
-- **Controller**: `eventController.createEvent` (Line 30-72 in `src/controllers/event.controller.js`)
+- **Controller**: `eventController.createEvent` (Line 30-85 in `src/controllers/event.controller.js`)
 - **Authentication**: Requires valid JWT token in Authorization header
 - **Validation**: Uses `createEventSchema` from `src/validations/event.validation.js`
 - **Validation Rules**:
@@ -48,6 +48,9 @@ All event CRUD endpoints (including search, user filtering, and event updates) a
   - Deadline: ISO datetime string (optional)
   - isPublic: boolean (defaults to true)
   - Status: string (defaults to 'active')
+- **Duplicate Prevention**:
+  - Prevents creating events with duplicate titles for the same user (case-insensitive)
+  - Returns 409 Conflict if duplicate found with message: "You already have an event with this title. Please choose a different title."
 - **Auto-generated fields**:
   - `id`: UUID v4
   - `currentAmount`: 0
@@ -55,7 +58,7 @@ All event CRUD endpoints (including search, user filtering, and event updates) a
   - `organizerEmail`: from authenticated user's email
   - `createdAt`: current timestamp
 - **Note**: Organizer information is automatically retrieved from the authenticated user - not sent in request body
-- **Response**: 201 Created with the new event
+- **Response**: 201 Created with the new event, or 409 Conflict if duplicate title exists
 
 ### 4. PUT /api/events/:id ✅
 - **Status**: Implemented

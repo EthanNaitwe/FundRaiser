@@ -31,7 +31,7 @@ const createEvent = async (req, res) => {
   try {
     // Fetch the authenticated user's information
     const user = await sheetsService.getUserById(req.user.id);
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -46,6 +46,20 @@ const createEvent = async (req, res) => {
       isPublic = true,
       status = 'active'
     } = req.body;
+
+    // Check if user already has an event with the same title (case-insensitive)
+    const existingEvents = await db.getEvents();
+    const duplicateEvent = existingEvents.find(event =>
+      event.organizerEmail === user.email &&
+      event.title.toLowerCase() === title.toLowerCase()
+    );
+
+    if (duplicateEvent) {
+      return res.status(409).json({
+        error: 'Duplicate event',
+        message: 'You already have an event with this title. Please choose a different title.'
+      });
+    }
 
     // Use the authenticated user's information for organizer details
     const newEvent = {
@@ -98,7 +112,7 @@ const deleteEvent = async (req, res) => {
   try {
     const eventId = req.params.id;
     const deleted = await db.deleteEvent(eventId);
-    
+
     if (!deleted) {
       return res.status(404).json({ error: 'Event not found' });
     }
@@ -114,10 +128,10 @@ const getEventsByUser = async (req, res) => {
   try {
     const { userId } = req.params;
     const events = await db.getEvents();
-    
+
     // Filter events by organizerEmail (assuming userId is email)
     const userEvents = events.filter(event => event.organizerEmail === userId);
-    
+
     res.json(userEvents);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch user events' });
@@ -129,31 +143,31 @@ const searchEvents = async (req, res) => {
   try {
     const { q, location, status } = req.query;
     let events = await db.getEvents();
-    
+
     // Apply filters
     if (q) {
       const searchTerm = q.toLowerCase();
-      events = events.filter(event => 
+      events = events.filter(event =>
         event.title.toLowerCase().includes(searchTerm) ||
         event.description.toLowerCase().includes(searchTerm) ||
         event.organizerName.toLowerCase().includes(searchTerm)
       );
     }
-    
+
     if (location) {
       const locationTerm = location.toLowerCase();
-      events = events.filter(event => 
+      events = events.filter(event =>
         event.location && event.location.toLowerCase().includes(locationTerm)
       );
     }
-    
+
     if (status) {
       events = events.filter(event => event.status === status);
     }
-    
+
     // Only return public events
     const publicEvents = events.filter(event => event.isPublic);
-    
+
     res.json(publicEvents);
   } catch (error) {
     res.status(500).json({ error: 'Failed to search events' });
