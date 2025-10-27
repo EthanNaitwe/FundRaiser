@@ -2,27 +2,27 @@ const { z } = require('zod');
 
 // Event validation schemas
 const createEventSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
-  description: z.string().min(1, 'Description is required').max(2000, 'Description too long'),
+  title: z.string().min(3, 'Title must be at least 3 characters').max(200, 'Title too long'),
+  description: z.string().min(10, 'Description must be at least 10 characters').max(2000, 'Description too long'),
   goalAmount: z.number().positive('Goal amount must be positive'),
-  coverImage: z.string().url('Invalid image URL').nullable().optional(),
-  location: z.string().max(200, 'Location too long').nullable().optional(),
-  deadline: z.string().datetime('Invalid deadline format').nullable().optional(),
+  coverImage: z.union([z.string().url('Invalid image URL'), z.literal('')]).optional(),
+  location: z.string().max(200, 'Location too long').optional(),
+  deadline: z.string().datetime('Invalid deadline format').optional(),
   isPublic: z.boolean().optional().default(true),
-  organizerName: z.string().min(1, 'Organizer name is required').max(100, 'Organizer name too long'),
+  organizerName: z.string().min(2, 'Organizer name must be at least 2 characters').max(100, 'Organizer name too long'),
   organizerEmail: z.string().email('Invalid email format'),
   status: z.string().optional().default('active')
 }).strict();
 
 const updateEventSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200, 'Title too long').optional(),
-  description: z.string().min(1, 'Description is required').max(2000, 'Description too long').optional(),
+  title: z.string().min(3, 'Title must be at least 3 characters').max(200, 'Title too long').optional(),
+  description: z.string().min(10, 'Description must be at least 10 characters').max(2000, 'Description too long').optional(),
   goalAmount: z.number().positive('Goal amount must be positive').optional(),
-  coverImage: z.string().url('Invalid image URL').nullable().optional(),
-  location: z.string().max(200, 'Location too long').nullable().optional(),
-  deadline: z.string().datetime('Invalid deadline format').nullable().optional(),
+  coverImage: z.union([z.string().url('Invalid image URL'), z.literal('')]).optional(),
+  location: z.string().max(200, 'Location too long').optional(),
+  deadline: z.string().datetime('Invalid deadline format').optional(),
   isPublic: z.boolean().optional(),
-  organizerName: z.string().min(1, 'Organizer name is required').max(100, 'Organizer name too long').optional(),
+  organizerName: z.string().min(2, 'Organizer name must be at least 2 characters').max(100, 'Organizer name too long').optional(),
   organizerEmail: z.string().email('Invalid email format').optional(),
   status: z.string().optional()
 }).strict();
