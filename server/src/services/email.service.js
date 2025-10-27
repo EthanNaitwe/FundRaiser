@@ -58,6 +58,37 @@ class EmailService {
     
     return await this.sendEmail(donorEmail, subject, text);
   }
+
+  async sendVerificationEmail(email, verificationLink) {
+    const subject = 'Verify your email address';
+    const html = `
+      <h2>Welcome to FundRaiser!</h2>
+      <p>Thank you for registering. Please verify your email address by clicking the link below:</p>
+      <p><a href="${verificationLink}">Verify Email</a></p>
+      <p>Or copy and paste this link into your browser:</p>
+      <p>${verificationLink}</p>
+      <p>This link will expire in 24 hours.</p>
+    `;
+    const text = `Welcome to FundRaiser! Please verify your email by visiting: ${verificationLink}`;
+    
+    return await this.sendEmail(email, subject, text, html);
+  }
+
+  async sendPasswordResetEmail(email, resetLink) {
+    const subject = 'Reset your password';
+    const html = `
+      <h2>Password Reset Request</h2>
+      <p>You requested to reset your password. Click the link below to reset it:</p>
+      <p><a href="${resetLink}">Reset Password</a></p>
+      <p>Or copy and paste this link into your browser:</p>
+      <p>${resetLink}</p>
+      <p>This link will expire in 1 hour.</p>
+      <p>If you did not request a password reset, please ignore this email.</p>
+    `;
+    const text = `Reset your password by visiting: ${resetLink}. This link expires in 1 hour.`;
+    
+    return await this.sendEmail(email, subject, text, html);
+  }
 }
 
 module.exports = new EmailService();

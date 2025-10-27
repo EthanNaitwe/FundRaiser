@@ -2,6 +2,9 @@ const config = {
   env: process.env.NODE_ENV || 'development',
   port: process.env.PORT || 3000,
   
+  // Frontend URL for email links
+  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+  
   // CORS configuration
   cors: {
     origin: process.env.CORS_ORIGIN || '*',

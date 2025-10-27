@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const sheetsService = require('../services/sheets.service');
+const emailService = require('../services/email.service');
 const config = require('../config/config');
 const logger = require('../utils/logger');
 
@@ -52,6 +53,10 @@ class AuthController {
       const saltRounds = 12;
       const hashedPassword = await bcrypt.hash(password, saltRounds);
 
+      // Generate email verification token
+      const verificationToken = uuidv4();
+      const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
       // Create user data
       const userData = {
         id: uuidv4(),
@@ -65,6 +70,10 @@ class AuthController {
         isVerified: false,
         isActive: true,
         lastLogin: null,
+        emailVerificationToken: verificationToken,
+        emailVerificationExpires: verificationExpires.toISOString(),
+        passwordResetToken: null,
+        passwordResetExpires: null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -115,6 +124,10 @@ class AuthController {
 
       // Remove password from response
       const { password: _, ...userResponse } = userData;
+
+      // Send verification email
+      const verificationLink = `${config.frontendUrl || 'http://localhost:5173'}/verify-email?token=${verificationToken}`;
+      await emailService.sendVerificationEmail(email, verificationLink);
 
       logger.info(`New user registered successfully: ${email}`);
 
@@ -384,6 +397,290 @@ class AuthController {
       });
     }
   }
+
+  // Refresh JWT token
+  async refresh(req, res) {
+    try {
+      const token = req.header('Authorization')?.replace('Bearer ', '');
+
+      if (!token) {
+        return res.status(401).json({
+          error: 'Access denied',
+          message: 'No token provided'
+        });
+      }
+
+      // Verify the existing token (but allow expired tokens)
+      const decoded = jwt.verify(token, config.jwt.secret, { ignoreExpiration: true });
+      
+      // Get user
+      const user = await sheetsService.getUserById(decoded.id);
+      if (!user || !user.isActive) {
+        return res.status(401).json({
+          error: 'Access denied',
+          message: 'User not found or inactive'
+        });
+      }
+
+      // Check if the session is still active
+      const sessions = await sheetsService.getAllRows('UserSessions');
+      const activeSession = sessions.find(session => 
+        session.sessionToken === token && 
+        session.isActive === true &&
+        session.userId === decoded.id
+      );
+
+      if (!activeSession) {
+        return res.status(401).json({
+          error: 'Access denied',
+          message: 'Session has been terminated'
+        });
+      }
+
+      // Generate new token
+      const newToken = jwt.sign(
+        { 
+          id: user.id, 
+          email: user.email, 
+          role: user.role,
+          isValid: true
+        },
+        config.jwt.secret,
+        { expiresIn: config.jwt.expiresIn }
+      );
+
+      // Create new session
+      await sheetsService.createUserSession({
+        id: uuidv4(),
+        userId: user.id,
+        sessionToken: newToken,
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('User-Agent') || 'Unknown',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        isActive: true,
+        createdAt: new Date().toISOString()
+      });
+
+      // Deactivate old session
+      await sheetsService.updateUserSession(activeSession.id, {
+        isActive: false,
+        updatedAt: new Date().toISOString()
+      });
+
+      logger.info(`Token refreshed for user: ${user.email}`);
+
+      res.json({
+        message: 'Token refreshed successfully',
+        token: newToken,
+        expiresIn: config.jwt.expiresIn
+      });
+
+    } catch (error) {
+      logger.error('Refresh token error:', error.message);
+      res.status(401).json({
+        error: 'Failed to refresh token',
+        message: 'Invalid or expired token'
+      });
+    }
+  }
+
+  // Forgot password - send reset token
+  async forgotPassword(req, res) {
+    try {
+      const { email } = req.body;
+
+      // Find user
+      const user = await sheetsService.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal if user exists for security
+        return res.json({
+          message: 'If an account with that email exists, a password reset link has been sent'
+        });
+      }
+
+      // Generate reset token
+      const resetToken = uuidv4();
+      const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      // Save reset token to user
+      await sheetsService.updateUser(user.id, {
+        passwordResetToken: resetToken,
+        passwordResetExpires: resetExpires.toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+
+      // Send email with reset link
+      const resetLink = `${config.frontendUrl || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+      logger.info(`Password reset link generated for ${email}: ${resetLink}`);
+
+      await emailService.sendPasswordResetEmail(email, resetLink);
+
+      logger.info(`Password reset requested for: ${email}`);
+
+      res.json({
+        message: 'If an account with that email exists, a password reset link has been sent',
+        // In production, remove this debug info
+        debug: {
+          resetLink
+        }
+      });
+
+    } catch (error) {
+      logger.error('Forgot password error:', error.message);
+      res.status(500).json({
+        error: 'Failed to process request',
+        message: 'An error occurred while processing your request'
+      });
+    }
+  }
+
+  // Reset password with token
+  async resetPassword(req, res) {
+    try {
+      const { token, newPassword } = req.body;
+
+      // Find user by reset token
+      const users = await sheetsService.getAllUsers();
+      const user = users.find(u => 
+        u.passwordResetToken === token &&
+        u.passwordResetExpires &&
+        new Date(u.passwordResetExpires) > new Date()
+      );
+
+      if (!user) {
+        return res.status(400).json({
+          error: 'Invalid or expired token',
+          message: 'The password reset token is invalid or has expired'
+        });
+      }
+
+      // Hash new password
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+      // Update user password and clear reset token
+      await sheetsService.updateUser(user.id, {
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+        updatedAt: new Date().toISOString()
+      });
+
+      logger.info(`Password reset completed for: ${user.email}`);
+
+      res.json({
+        message: 'Password has been reset successfully'
+      });
+
+    } catch (error) {
+      logger.error('Reset password error:', error.message);
+      res.status(500).json({
+        error: 'Failed to reset password',
+        message: 'An error occurred while resetting your password'
+      });
+    }
+  }
+
+  // Verify email address
+  async verifyEmail(req, res) {
+    try {
+      const { token } = req.body;
+
+      // Find user by verification token
+      const users = await sheetsService.getAllUsers();
+      const user = users.find(u => 
+        u.emailVerificationToken === token &&
+        u.emailVerificationExpires &&
+        new Date(u.emailVerificationExpires) > new Date()
+      );
+
+      if (!user) {
+        return res.status(400).json({
+          error: 'Invalid or expired token',
+          message: 'The verification token is invalid or has expired'
+        });
+      }
+
+      // Update user as verified
+      await sheetsService.updateUser(user.id, {
+        isVerified: true,
+        emailVerificationToken: null,
+        emailVerificationExpires: null,
+        updatedAt: new Date().toISOString()
+      });
+
+      logger.info(`Email verified for: ${user.email}`);
+
+      res.json({
+        message: 'Email verified successfully'
+      });
+
+    } catch (error) {
+      logger.error('Verify email error:', error.message);
+      res.status(500).json({
+        error: 'Failed to verify email',
+        message: 'An error occurred while verifying your email'
+      });
+    }
+  }
+
+  // Resend verification email
+  async resendVerification(req, res) {
+    try {
+      const { email } = req.body;
+
+      // Find user
+      const user = await sheetsService.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal if user exists for security
+        return res.json({
+          message: 'If an account with that email exists, a verification email has been sent'
+        });
+      }
+
+      // Check if already verified
+      if (user.isVerified) {
+        return res.status(400).json({
+          error: 'Already verified',
+          message: 'This email address has already been verified'
+        });
+      }
+
+      // Generate verification token
+      const verificationToken = uuidv4();
+      const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Save verification token to user
+      await sheetsService.updateUser(user.id, {
+        emailVerificationToken: verificationToken,
+        emailVerificationExpires: verificationExpires.toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+
+      // Send email with verification link
+      const verificationLink = `${config.frontendUrl || 'http://localhost:5173'}/verify-email?token=${verificationToken}`;
+      logger.info(`Email verification link generated for ${email}: ${verificationLink}`);
+
+      await emailService.sendVerificationEmail(email, verificationLink);
+
+      logger.info(`Verification email resent to: ${email}`);
+
+      res.json({
+        message: 'If an account with that email exists, a verification email has been sent',
+        // In production, remove this debug info
+        debug: {
+          verificationLink
+        }
+      });
+
+    } catch (error) {
+      logger.error('Resend verification error:', error.message);
+      res.status(500).json({
+        error: 'Failed to send verification email',
+        message: 'An error occurred while sending the verification email'
+      });
+    }
+  }
 }
 
 const authController = new AuthController();
@@ -394,5 +691,10 @@ module.exports = {
   logout: authController.logout.bind(authController),
   getProfile: authController.getProfile.bind(authController),
   updateProfile: authController.updateProfile.bind(authController),
-  invalidateAllSessions: authController.invalidateAllSessions.bind(authController)
+  invalidateAllSessions: authController.invalidateAllSessions.bind(authController),
+  refresh: authController.refresh.bind(authController),
+  forgotPassword: authController.forgotPassword.bind(authController),
+  resetPassword: authController.resetPassword.bind(authController),
+  verifyEmail: authController.verifyEmail.bind(authController),
+  resendVerification: authController.resendVerification.bind(authController)
 };
