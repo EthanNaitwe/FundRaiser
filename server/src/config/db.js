@@ -113,6 +113,52 @@ const findContributionsByEventId = async (eventId) => {
   }
 };
 
+// Event Updates functions
+const getEventUpdatesByEventId = async (eventId) => {
+  try {
+    return await sheetsService.getEventUpdatesByEventId(eventId);
+  } catch (error) {
+    logger.error('Failed to get event updates:', error.message);
+    return [];
+  }
+};
+
+const getEventUpdateById = async (id) => {
+  try {
+    return await sheetsService.getEventUpdateById(id);
+  } catch (error) {
+    logger.error('Failed to find event update by ID:', error.message);
+    return null;
+  }
+};
+
+const addEventUpdate = async (updateData) => {
+  try {
+    return await sheetsService.createEventUpdate(updateData);
+  } catch (error) {
+    logger.error('Failed to add event update:', error.message);
+    throw error;
+  }
+};
+
+const updateEventUpdate = async (id, updates) => {
+  try {
+    return await sheetsService.updateEventUpdate(id, updates);
+  } catch (error) {
+    logger.error('Failed to update event update:', error.message);
+    throw error;
+  }
+};
+
+const deleteEventUpdate = async (id) => {
+  try {
+    return await sheetsService.deleteEventUpdate(id);
+  } catch (error) {
+    logger.error('Failed to delete event update:', error.message);
+    throw error;
+  }
+};
+
 module.exports = {
   connectDatabase,
   getEvents,
@@ -124,5 +170,10 @@ module.exports = {
   deleteEvent,
   findEventById,
   findContributionById,
-  findContributionsByEventId
+  findContributionsByEventId,
+  getEventUpdatesByEventId,
+  getEventUpdateById,
+  addEventUpdate,
+  updateEventUpdate,
+  deleteEventUpdate
 };

@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const db = require('../config/db');
+const sheetsService = require('../services/sheets.service');
 
 // Get all public events
 const getAllEvents = async (req, res) => {
@@ -28,6 +29,13 @@ const getEventById = async (req, res) => {
 // Create new event
 const createEvent = async (req, res) => {
   try {
+    // Fetch the authenticated user's information
+    const user = await sheetsService.getUserById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     const {
       title,
       description,
@@ -36,11 +44,10 @@ const createEvent = async (req, res) => {
       location,
       deadline,
       isPublic = true,
-      organizerName,
-      organizerEmail,
       status = 'active'
     } = req.body;
 
+    // Use the authenticated user's information for organizer details
     const newEvent = {
       id: uuidv4(),
       title,
@@ -51,8 +58,8 @@ const createEvent = async (req, res) => {
       location,
       deadline: deadline ? new Date(deadline) : null,
       isPublic,
-      organizerName,
-      organizerEmail,
+      organizerName: user.name,
+      organizerEmail: user.email,
       status,
       createdAt: new Date()
     };

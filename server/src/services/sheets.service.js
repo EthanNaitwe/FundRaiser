@@ -320,6 +320,33 @@ class GoogleSheetsService {
   async deleteUserSession(id) {
     return await this.deleteRow(sheetsConfig.sheets.userSessions, id);
   }
+
+  // Event Updates methods
+  async getAllEventUpdates() {
+    return await this.getAllRows(sheetsConfig.sheets.eventUpdates);
+  }
+
+  async getEventUpdateById(id) {
+    const updates = await this.getAllEventUpdates();
+    return updates.find(update => update.id === id);
+  }
+
+  async getEventUpdatesByEventId(eventId) {
+    const updates = await this.getAllEventUpdates();
+    return updates.filter(update => update.eventId === eventId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+
+  async createEventUpdate(updateData) {
+    return await this.addRow(sheetsConfig.sheets.eventUpdates, updateData);
+  }
+
+  async updateEventUpdate(id, updates) {
+    return await this.updateRow(sheetsConfig.sheets.eventUpdates, id, updates);
+  }
+
+  async deleteEventUpdate(id) {
+    return await this.deleteRow(sheetsConfig.sheets.eventUpdates, id);
+  }
 }
 
 module.exports = new GoogleSheetsService();

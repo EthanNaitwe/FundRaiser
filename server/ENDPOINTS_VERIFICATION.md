@@ -1,9 +1,9 @@
 # Event CRUD Endpoints Verification
 
 ## ✅ Summary
-All event CRUD endpoints (including search and user filtering) are properly implemented and configured in the FundRaiser API.
+All event CRUD endpoints (including search, user filtering, and event updates) are properly implemented and configured in the FundRaiser API.
 
-**Total Endpoints Implemented**: 7
+**Total Endpoints Implemented**: 11
 
 ## 📋 Endpoints Status
 
@@ -33,17 +33,16 @@ All event CRUD endpoints (including search and user filtering) are properly impl
   ```
 
 ### 3. POST /api/events ✅
-- **Status**: Implemented
-- **Purpose**: Create new event (authenticated)
-- **Route**: Line 21 in `src/routes/index.js`
-- **Controller**: `eventController.createEvent` (Line 29-65 in `src/controllers/event.controller.js`)
+- **Status**: Implemented & Protected
+- **Purpose**: Create new event (authenticated users only)
+- **Route**: Line 27 in `src/routes/index.js`
+- **Controller**: `eventController.createEvent` (Line 30-72 in `src/controllers/event.controller.js`)
+- **Authentication**: Requires valid JWT token in Authorization header
 - **Validation**: Uses `createEventSchema` from `src/validations/event.validation.js`
 - **Validation Rules**:
   - Title: min 3 chars, max 200 chars
   - Description: min 10 chars, max 2000 chars
   - Goal Amount: positive number
-  - Organizer Name: min 2 chars, max 100 chars
-  - Organizer Email: valid email format
   - Cover Image: valid URL or empty string (optional)
   - Location: max 200 chars (optional)
   - Deadline: ISO datetime string (optional)
@@ -52,8 +51,11 @@ All event CRUD endpoints (including search and user filtering) are properly impl
 - **Auto-generated fields**:
   - `id`: UUID v4
   - `currentAmount`: 0
+  - `organizerName`: from authenticated user's name
+  - `organizerEmail`: from authenticated user's email
   - `createdAt`: current timestamp
-- **Response**: 201 Created
+- **Note**: Organizer information is automatically retrieved from the authenticated user - not sent in request body
+- **Response**: 201 Created with the new event
 
 ### 4. PUT /api/events/:id ✅
 - **Status**: Implemented
@@ -104,6 +106,60 @@ All event CRUD endpoints (including search and user filtering) are properly impl
   - Returns all events created by the user (public and private)
 - **Example**: `/api/events/user/jane@example.com`
 - **Response**: 200 OK with user's events array
+
+## 📢 Event Updates Endpoints
+
+### 8. GET /api/events/:id/updates ✅
+- **Status**: Implemented
+- **Purpose**: Get all updates for an event
+- **Route**: Line 33 in `src/routes/index.js`
+- **Controller**: `eventUpdateController.getEventUpdates` (Line 5-20 in `src/controllers/event-update.controller.js`)
+- **Functionality**:
+  - Returns all updates for the specified event
+  - Sorted by creation date (newest first)
+  - Returns 404 if event not found
+- **Example**: `/api/events/abc123/updates`
+- **Response**: 200 OK with array of updates
+
+### 9. POST /api/events/:id/updates ✅
+- **Status**: Implemented
+- **Purpose**: Create an update for an event (organizer only)
+- **Route**: Line 34 in `src/routes/index.js`
+- **Controller**: `eventUpdateController.createEventUpdate` (Line 22-63 in `src/controllers/event-update.controller.js`)
+- **Validation**: Uses `createEventUpdateSchema` from `src/validations/event.validation.js`
+- **Validation Rules**:
+  - Title: min 3 chars, max 200 chars
+  - Content: min 10 chars, max 5000 chars
+  - Images: optional string
+  - isPublic: boolean (defaults to true)
+- **Auto-generated fields**:
+  - `id`: UUID v4
+  - `eventId`: from URL parameter
+  - `organizerId`: from event's organizerEmail
+  - `createdAt`: current timestamp
+- **Response**: 201 Created with the new update
+
+### 10. PUT /api/events/:id/updates/:updateId ✅
+- **Status**: Implemented
+- **Purpose**: Update an event update (organizer only)
+- **Route**: Line 35 in `src/routes/index.js`
+- **Controller**: `eventUpdateController.updateEventUpdate` (Line 65-89 in `src/controllers/event-update.controller.js`)
+- **Validation**: Uses `updateEventUpdateSchema` from `src/validations/event.validation.js`
+- **Functionality**:
+  - Accepts partial updates
+  - Verifies update belongs to the event
+  - Returns 404 if event or update not found
+- **Response**: 200 OK with updated event update
+
+### 11. DELETE /api/events/:id/updates/:updateId ✅
+- **Status**: Implemented
+- **Purpose**: Delete an event update (organizer only)
+- **Route**: Line 36 in `src/routes/index.js`
+- **Controller**: `eventUpdateController.deleteEventUpdate` (Line 91-124 in `src/controllers/event-update.controller.js`)
+- **Functionality**:
+  - Verifies update belongs to the event
+  - Returns 404 if event or update not found
+- **Response**: 200 OK with success message
 
 ## 🔧 Recent Fixes Applied
 
