@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/form";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 // Validation schemas
 const loginSchema = z.object({
@@ -163,8 +164,20 @@ export default function AuthDialog({ open, onOpenChange, defaultTab = "login" }:
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" data-testid="button-login-submit">
-                  Log In
+                <Button
+                  type="submit"
+                  className="w-full"
+                  data-testid="button-login-submit"
+                  disabled={loginForm.formState.isSubmitting}
+                >
+                  {loginForm.formState.isSubmitting ? (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Logging in...
+                    </span>
+                  ) : (
+                    "Log In"
+                  )}
                 </Button>
               </form>
             </Form>
