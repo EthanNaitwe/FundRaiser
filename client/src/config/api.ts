@@ -45,6 +45,8 @@ export const api = {
     byId: (id: string) => request<Record<string, unknown>>("GET", endpoints.events.byId(id)),
     contribute: (id: string, payload: Record<string, unknown>) =>
       request<void>("POST", endpoints.events.contribute(id), payload),
+    createPledge: (id: string, payload: Record<string, unknown>) =>
+      request<{ id: string }>("POST", endpoints.events.createPledge(id), payload),
   },
 };
 

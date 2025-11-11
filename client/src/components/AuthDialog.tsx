@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -52,6 +53,7 @@ interface AuthDialogProps {
 export default function AuthDialog({ open, onOpenChange, defaultTab = "login" }: AuthDialogProps) {
   const { login, signup } = useAuth();
   const { toast } = useToast();
+  const [loginError, setLoginError] = useState<string | null>(null);
   
   // React Hook Form setup
   const loginForm = useForm<LoginFormData>({
@@ -75,6 +77,7 @@ export default function AuthDialog({ open, onOpenChange, defaultTab = "login" }:
 
   const handleLogin = async (data: LoginFormData) => {
     try {
+      setLoginError(null);
       await login(data.email, data.password);
       toast({
         title: "Welcome back!",
@@ -83,11 +86,8 @@ export default function AuthDialog({ open, onOpenChange, defaultTab = "login" }:
       onOpenChange(false);
       loginForm.reset();
     } catch (error) {
-      toast({
-        title: "Login failed",
-        description: "Please check your credentials and try again.",
-        variant: "destructive",
-      });
+      const message = (error as any)?.message || "Login failed. Please try again.";
+      setLoginError(message);
     }
   };
 
@@ -164,6 +164,11 @@ export default function AuthDialog({ open, onOpenChange, defaultTab = "login" }:
                     </FormItem>
                   )}
                 />
+                {loginError && (
+                  <div className="text-sm text-destructive" data-testid="login-error">
+                    {loginError}
+                  </div>
+                )}
                 <Button
                   type="submit"
                   className="w-full"

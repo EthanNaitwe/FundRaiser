@@ -17,6 +17,7 @@ export const endpoints = {
     create: () => `/events`,
     byId: (id: string) => `/events/${id}`,
     contribute: (id: string) => `/events/${id}/contributions`,
+    createPledge: (id: string) => `/events/${id}/pledges`,
   },
 } as const;
 

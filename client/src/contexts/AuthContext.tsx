@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { api } from "@/config/api";
+import { queryClient } from "@/lib/queryClient";
 
 interface User {
   id: string;
@@ -53,11 +54,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    // Fire-and-forget; don't block UI on network
-    api.auth.logout().catch(() => {});
+    try {
+      // Best-effort invalidate server session
+      api.auth.logout().catch(() => {});
+    } finally {
+      // Clear all client auth data
+      setUser(null);
+      try {
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        sessionStorage.clear();
+      } catch {}
+
+      // Clear React Query cache
+      try {
+        queryClient.clear();
+      } catch {}
+
+      // Optional: force navigation to home to avoid stale protected views
+      try {
+        if (typeof window !== 'undefined') {
+          window.location.assign("/");
+        }
+      } catch {}
+    }
   };
 
   return (
